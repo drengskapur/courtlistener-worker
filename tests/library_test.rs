@@ -30,17 +30,6 @@ fn test_court_type_creation() {
         name: Some("Supreme Court of the United States".to_string()),
         full_name: Some("Supreme Court of the United States".to_string()),
         abbreviation: Some("SCOTUS".to_string()),
-        url: None,
-        slug: None,
-        start_date: None,
-        end_date: None,
-        jurisdiction: None,
-        court_type: None,
-        parent_court: None,
-        citation_string: None,
-        citation_count: None,
-        docket_count: None,
-        precedential_status: None,
     };
 
     assert_eq!(court.id, "us");
