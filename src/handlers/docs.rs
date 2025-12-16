@@ -415,7 +415,7 @@ async fn get_sample_for_openapi(
         Err(_) => return None,
     };
     
-    if let Ok(mut headers) = req.headers_mut() {
+    if let Ok(headers) = req.headers_mut() {
         if headers.set("Accept", "application/json").is_err() {
             return None;
         }
@@ -424,7 +424,7 @@ async fn get_sample_for_openapi(
     }
     
     if let Ok(token) = env.secret("COURTLISTENER_API_TOKEN") {
-        if let Ok(mut headers) = req.headers_mut() {
+        if let Ok(headers) = req.headers_mut() {
             let _ = headers.set("Authorization", &format!("Token {}", token.to_string()));
         }
     }

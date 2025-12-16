@@ -10,6 +10,7 @@ use worker::*;
 use serde::{Deserialize, Serialize};
 
 /// Cache configuration
+#[allow(dead_code)]
 pub struct CacheConfig {
     /// Default TTL in seconds (10 minutes)
     pub default_ttl: u64,

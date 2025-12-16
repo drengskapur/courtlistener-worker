@@ -4,6 +4,7 @@ use worker::Error as WorkerError;
 
 /// Main error type for the CourtListener Worker
 #[derive(Debug)]
+#[allow(dead_code)]
 pub enum CourtListenerError {
     /// Worker framework error
     Worker(WorkerError),
@@ -47,10 +48,12 @@ impl std::fmt::Display for CourtListenerError {
 impl std::error::Error for CourtListenerError {}
 
 /// Result type alias for convenience
+#[allow(dead_code)]
 pub type Result<T> = std::result::Result<T, CourtListenerError>;
 
 /// Convert to worker::Result for compatibility
 impl CourtListenerError {
+    #[allow(dead_code)]
     pub fn to_worker_result<T>(result: Result<T>) -> worker::Result<T> {
         result.map_err(|e| match e {
             CourtListenerError::Worker(err) => err,

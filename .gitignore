@@ -2,9 +2,9 @@
 .env
 .env.local
 .idea/
-.log
 .vscode/
 .wrangler/
+*.log
 *.pdb
 *.swo
 *.swp
