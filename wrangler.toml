@@ -3,7 +3,7 @@ main = "build/worker/shim.mjs"
 compatibility_date = "2024-01-01"
 
 [build]
-command = "cargo install worker-build@^0.7 && worker-build"
+command = "cargo install worker-build && worker-build --release"
 
 # KV namespace for caching
 [[kv_namespaces]]
