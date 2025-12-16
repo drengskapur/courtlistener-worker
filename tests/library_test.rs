@@ -136,8 +136,7 @@ fn test_people_response_deserialization() {
         "results": [
             {
                 "id": 456,
-                "name_first": "John",
-                "name_last": "Doe"
+                "name": "John Doe"
             }
         ]
     }"#;
