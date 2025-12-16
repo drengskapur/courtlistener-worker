@@ -1,0 +1,29 @@
+[package]
+name = "courtlistener-worker"
+version = "0.1.0"
+edition = "2021"
+authors = ["CourtListener Worker Contributors"]
+description = "A Cloudflare Worker written in Rust for interacting with the CourtListener API"
+license = "MIT"
+repository = "https://github.com/drengskapur/courtlistener-worker"
+keywords = ["courtlistener", "legal", "api", "cloudflare", "worker", "rust"]
+categories = ["web-programming", "api-bindings"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+worker = "0.7.1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+scalar_api_reference = "0.1.0"
+validator = { version = "0.18", features = ["derive"] }
+
+[profile.release]
+opt-level = "z"
+lto = true
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }
+reqwest = { version = "0.12", features = ["json"] }
+serde_test = "1.0"
