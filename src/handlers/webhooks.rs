@@ -20,8 +20,11 @@ pub async fn receive_webhook(_req: &Request, _env: &Env, body: &str) -> Result<R
     };
 
     // Parse webhook payload
-    let payload: serde_json::Value = serde_json::from_str(body)
+    let payload: crate::WebhookEvent = serde_json::from_str(body)
         .map_err(|e| worker::Error::RustError(format!("Failed to parse webhook payload: {}", e)))?;
+    
+    // TODO: Validate specific payload types based on event_type
+    // For example, if event_type is "pray_and_pay", deserialize and validate PrayAndPayWebhookPayload
 
     // Log webhook details (without sensitive data)
     if let Some(key) = &idempotency_key {
@@ -30,9 +33,9 @@ pub async fn receive_webhook(_req: &Request, _env: &Env, body: &str) -> Result<R
     worker::console_log!(
         "Webhook payload type: {}",
         payload
-            .get("webhook")
-            .and_then(|w| w.get("event_type"))
-            .and_then(|t| t.as_str())
+            .webhook
+            .event_type
+            .as_deref()
             .unwrap_or("unknown")
     );
 

@@ -30,6 +30,18 @@
 //!     Response::from_json(&courts)
 //! }
 //! ```
+//!
+//! # Validation
+//!
+//! For types that implement `validator::Validate`, use `fetch_json_validated`:
+//!
+//! ```no_run
+//! use courtlistener_worker::{ApiClient, PrayAndPayWebhookPayload};
+//! use validator::Validate;
+//!
+//! // This will validate the response before returning
+//! let payload: PrayAndPayWebhookPayload = ApiClient::fetch_json_validated(&env, "/webhook", &req).await?;
+//! ```
 
 use worker::*;
 

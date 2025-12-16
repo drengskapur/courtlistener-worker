@@ -1,6 +1,7 @@
 //! Webhook types for CourtListener API
 
 use serde::{Deserialize, Serialize};
+use validator::Validate;
 
 /// Webhook event metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -48,10 +49,14 @@ pub struct RecapFetchWebhookPayload {
 }
 
 /// Pray and Pay webhook payload
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
 pub struct PrayAndPayWebhookPayload {
+    #[validate(range(min = 1))]
     pub id: u32,
+    #[validate(length(min = 1))]
     pub date_created: String,
-    pub status: u32,         // 1 = Waiting, 2 = Granted
+    #[validate(range(min = 1, max = 2))]
+    pub status: u32, // 1 = Waiting, 2 = Granted
+    #[validate(range(min = 1))]
     pub recap_document: u32, // RECAP document ID
 }
