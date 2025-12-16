@@ -1,56 +1,74 @@
-//! Utility functions for the CourtListener Worker
+//! Internal utility functions
 
 use worker::*;
 
-/// Sanitize error messages to prevent leaking sensitive information
-pub fn sanitize_error(error: &str) -> String {
+/// Sanitize error messages to prevent sensitive data leaks
+pub(crate) fn sanitize_error(text: &str) -> String {
     // Truncate long error messages
-    if error.len() > 200 {
-        format!("{}...", &error[..200])
-    } else {
-        error.to_string()
-    }
+    let truncated = if text.len() > 200 { &text[..200] } else { text };
+    truncated.to_string()
 }
 
-/// Get CORS allowed origins from environment or use default
-pub fn get_cors_origins() -> String {
-    std::env::var("CORS_ALLOWED_ORIGINS").unwrap_or_else(|_| "*".to_string())
-}
+/// Create CORS preflight response for OPTIONS requests
+pub(crate) fn cors_preflight_response() -> worker::Result<Response> {
+    use crate::config::get_cors_origins;
 
-/// Create a JSON response with CORS headers
-pub fn json_response(data: &serde_json::Value) -> Result<Response> {
-    let mut response = Response::from_json(data)?;
-    let headers = response.headers_mut();
-    headers.set("Content-Type", "application/json")?;
-    headers.set("Access-Control-Allow-Origin", &get_cors_origins())?;
-    headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")?;
-    headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, Idempotency-Key")?;
-    Ok(response)
-}
-
-/// Create a JSON response with cache headers
-pub fn json_response_with_cache(data: &serde_json::Value, cache_ttl: u64) -> Result<Response> {
-    let mut response = json_response(data)?;
-    let headers = response.headers_mut();
-    headers.set("Cache-Control", &format!("public, max-age={}", cache_ttl))?;
-    headers.set("X-Cache", "MISS")?;
-    Ok(response)
-}
-
-/// Handle CORS preflight requests
-pub fn cors_preflight_response() -> Result<Response> {
     let mut response = Response::ok("")?;
     let headers = response.headers_mut();
     headers.set("Access-Control-Allow-Origin", &get_cors_origins())?;
-    headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")?;
-    headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, Idempotency-Key")?;
+    headers.set(
+        "Access-Control-Allow-Methods",
+        "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+    )?;
+    headers.set(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Authorization",
+    )?;
     headers.set("Access-Control-Max-Age", "86400")?;
+    Ok(response)
+}
+
+/// Create a JSON response with CORS headers
+pub(crate) fn json_response<T: serde::Serialize>(data: &T) -> worker::Result<Response> {
+    json_response_with_cache(data, None, false)
+}
+
+/// Create a JSON response with CORS headers and cache headers
+/// `endpoint`: Optional endpoint path for determining cache TTL
+/// `from_cache`: Whether this response was served from cache
+pub(crate) fn json_response_with_cache<T: serde::Serialize>(
+    data: &T,
+    endpoint: Option<&str>,
+    from_cache: bool,
+) -> worker::Result<Response> {
+    use crate::cache::{add_cache_headers, get_cache_ttl};
+    use crate::config::get_cors_origins;
+
+    let mut response = Response::from_json(data)?;
+    let headers = response.headers_mut();
+    headers.set("Access-Control-Allow-Origin", &get_cors_origins())?;
+    headers.set(
+        "Access-Control-Allow-Methods",
+        "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+    )?;
+    headers.set(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Authorization",
+    )?;
+    headers.set("Content-Type", "application/json")?;
+
+    // Add cache headers if endpoint is provided
+    if let Some(endpoint) = endpoint {
+        let cache_ttl = get_cache_ttl(endpoint);
+        add_cache_headers(headers, cache_ttl, from_cache)?;
+    }
+
     Ok(response)
 }
 
 /// Generate a request ID for tracing requests
 /// Uses the X-Request-ID header if present, otherwise generates a new one
-pub fn get_or_create_request_id(req: &Request) -> String {
+pub(crate) fn get_or_create_request_id(req: &Request) -> String {
     // Check for existing request ID in headers
     if let Ok(Some(id)) = req.headers().get("X-Request-ID") {
         return id;
@@ -64,7 +82,7 @@ pub fn get_or_create_request_id(req: &Request) -> String {
 }
 
 /// Log a structured message with request ID
-pub fn log_with_request_id(request_id: &str, level: &str, message: &str) {
+pub(crate) fn log_with_request_id(request_id: &str, level: &str, message: &str) {
     worker::console_log!(
         "[{}] [{}] {}",
         request_id,
@@ -74,7 +92,7 @@ pub fn log_with_request_id(request_id: &str, level: &str, message: &str) {
 }
 
 /// Log a structured message with request ID and additional context
-pub fn log_with_context(request_id: &str, level: &str, message: &str, context: &serde_json::Value) {
+pub(crate) fn log_with_context(request_id: &str, level: &str, message: &str, context: &serde_json::Value) {
     worker::console_log!(
         "[{}] [{}] {} | Context: {}",
         request_id,
