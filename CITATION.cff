@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: "CourtListener Worker Contributors"
+    orcid: "https://orcid.org/0000-0000-0000-0000"
+title: "CourtListener Worker"
+version: 4.4.0
+doi: 10.5281/zenodo.0000000
+date-released: 2024-12-16
+url: "https://github.com/drengskapur/courtlistener-worker"
+repository-code: "https://github.com/drengskapur/courtlistener-worker"
+license: MIT
+keywords:
+  - rust
+  - cloudflare-workers
+  - courtlistener
+  - legal-api
+  - api-proxy
+  - openapi
+  - rest-api
+  - legal-tech
+
