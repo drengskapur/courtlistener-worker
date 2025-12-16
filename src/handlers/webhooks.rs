@@ -9,7 +9,7 @@ use worker::*;
 ///
 /// Webhook events come from IPs: 34.210.230.218 or 54.189.59.91
 /// Each event includes an Idempotency-Key header for deduplication
-pub async fn receive_webhook(_req: &Request, _env: &Env, body: &str) -> Result<Response> {
+pub async fn receive_webhook(_req: &Request, env: &Env, body: &str) -> Result<Response> {
     // Log webhook receipt
     worker::console_log!("Webhook received: {} {}", _req.method(), _req.path());
 
@@ -19,6 +19,18 @@ pub async fn receive_webhook(_req: &Request, _env: &Env, body: &str) -> Result<R
         Ok(Some(val)) => val,
         _ => "application/json".to_string(),
     };
+
+    // Check idempotency key to avoid duplicate processing
+    if let Some(ref key) = idempotency_key {
+        if check_idempotency_key(env, key).await {
+            worker::console_log!("Duplicate webhook detected (idempotency key: {}), returning 200 OK", key);
+            // Return 200 OK for duplicate requests (idempotent)
+            let mut response = Response::ok("Webhook already processed")?;
+            let headers = response.headers_mut();
+            headers.set("Content-Type", "application/json")?;
+            return Ok(response);
+        }
+    }
 
     // Parse webhook payload
     let payload: crate::WebhookEvent = serde_json::from_str(body)
@@ -70,11 +82,17 @@ pub async fn receive_webhook(_req: &Request, _env: &Env, body: &str) -> Result<R
             .unwrap_or("unknown")
     );
 
-    // TODO: Process webhook event here
-    // - Check idempotency key to avoid duplicate processing
-    // - Validate webhook signature (if implemented)
-    // - Process the event payload
-    // - Store/forward as needed
+    // Store idempotency key to prevent duplicate processing
+    // TTL: 7 days (604800 seconds) - webhooks should not be retried after this
+    if let Some(ref key) = idempotency_key {
+        store_idempotency_key(env, key).await;
+    }
+
+    // Process webhook event based on type
+    // TODO: Add event-specific processing logic here
+    // - Store webhook event in KV or D1 (if needed)
+    // - Forward to external webhook endpoints (if configured)
+    // - Trigger downstream processing
 
     // Return 200 OK to acknowledge receipt
     // CourtListener will retry if we return non-2xx status
@@ -82,4 +100,43 @@ pub async fn receive_webhook(_req: &Request, _env: &Env, body: &str) -> Result<R
     let headers = response.headers_mut();
     headers.set("Content-Type", "application/json")?;
     Ok(response)
+}
+
+/// Check if an idempotency key has already been processed
+/// Returns true if the key exists (duplicate), false if new
+async fn check_idempotency_key(env: &Env, key: &str) -> bool {
+    // Use KV namespace for idempotency tracking
+    // KV namespace should be bound as "CACHE" in wrangler.toml
+    if let Ok(kv) = env.kv("CACHE") {
+        let cache_key = format!("idempotency:{}", key);
+        if let Ok(Some(_)) = kv.get(&cache_key).text().await {
+            return true; // Key exists, this is a duplicate
+        }
+    }
+    false // Key doesn't exist, this is a new request
+}
+
+/// Store an idempotency key to prevent duplicate processing
+/// Stores with 7-day TTL (604800 seconds)
+async fn store_idempotency_key(env: &Env, key: &str) {
+    // Use KV namespace for idempotency tracking
+    if let Ok(kv) = env.kv("CACHE") {
+        let cache_key = format!("idempotency:{}", key);
+        let ttl = 604800u64; // 7 days in seconds
+        
+        // Store with timestamp as value (for debugging/analytics)
+        let value = crate::cache::now_seconds().to_string();
+        
+        if let Err(e) = kv
+            .put(&cache_key, value.as_str())
+            .unwrap()
+            .expiration_ttl(ttl)
+            .execute()
+            .await
+        {
+            worker::console_log!("Failed to store idempotency key: {}", e);
+        } else {
+            worker::console_log!("Stored idempotency key: {} (TTL: {}s)", key, ttl);
+        }
+    }
 }
