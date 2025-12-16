@@ -256,7 +256,7 @@ fn test_citations_response_deserialization() {
         "results": [
             {
                 "id": 111,
-                "depth": 1
+                "depth": "1"
             }
         ]
     }"#;
