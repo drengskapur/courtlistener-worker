@@ -54,7 +54,9 @@ pub async fn main(
         .get("/", |_req, _ctx| {
             Response::ok("CourtListener Worker API\n\nVisit /docs for API documentation")
         })
-        .get("/health", |_req, _ctx| Response::ok("OK"))
+        .get_async("/health", |_req, ctx| async move {
+            handlers::health_check(&ctx.env).await
+        })
         // Endpoint comparison tool
         .get_async("/check-endpoints", |_req, ctx| async move {
             handlers::check_endpoints(&ctx.env).await
