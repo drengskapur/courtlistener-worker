@@ -5,7 +5,7 @@
 [![Security Policy](https://img.shields.io/badge/Security-Policy-blue.svg)](SECURITY.md)
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://drengskapur.github.io/courtlistener-worker/)
 
-> A Cloudflare Worker written in Rust for interacting with the CourtListener API, with complete type definitions for all API responses.
+> A Rust library for the CourtListener API with complete type definitions and optional Cloudflare Worker support.
 
 ## Table of Contents
 
@@ -18,7 +18,12 @@
 
 ## Background
 
-This worker provides a type-safe Rust interface to the CourtListener API, running on Cloudflare Workers. It includes complete type definitions for all API responses and supports all CourtListener API features including search, alerts, webhooks, and audio streaming.
+This library provides a type-safe Rust interface to the CourtListener API. It can be used as:
+
+1. **A Rust library** - Use all types, config, and utilities in your Rust projects (e.g., lawforge)
+2. **A Cloudflare Worker** - Optional worker implementation with caching, routing, and API proxying
+
+It includes complete type definitions for all API responses and supports all CourtListener API features including search, alerts, webhooks, and audio streaming.
 
 ## Install
 
