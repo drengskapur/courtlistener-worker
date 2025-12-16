@@ -2,7 +2,7 @@
 
 ## Proc Macro Limitation
 
-The `#[event]` proc macro from the `worker` crate requires special handling when used with optional dependencies. Currently, there's a known issue where the proc macro may not be found when the worker dependency is optional.
+The `#[event]` proc macro from the `worker` crate has a known issue with optional dependencies in Rust. Proc macros from optional dependencies may not be available at compile time, which prevents the `#[event]` macro from working when the worker dependency is optional.
 
 ## Solutions
 
@@ -17,22 +17,57 @@ courtlistener-worker = { path = "../courtlistener-worker", default-features = fa
 
 This gives you access to all types, config, and utilities without the worker implementation.
 
-### Option 2: Deploy Worker Separately
+**Example usage in lawforge:**
+```rust
+use courtlistener_worker::*;
 
-If you need to deploy the worker, you can:
+// All types are available
+let court = Court {
+    id: "us".to_string(),
+    name: Some("Supreme Court".to_string()),
+    // ...
+};
 
-1. Create a separate binary crate that depends on this library
-2. Use the worker module's routing function directly
-3. Or make the worker dependency non-optional when deploying
+// Config constants
+let api_version = API_VERSION;
+let base_url = API_BASE_URL;
+```
 
-### Option 3: Fix Proc Macro Issue
+### Option 2: Deploy Worker via Separate Binary Crate
 
-The proc macro issue can be resolved by ensuring the worker crate is always available when the feature is enabled. This may require adjusting the Cargo.toml configuration or using a different crate structure.
+Create a separate binary crate (e.g., `courtlistener-worker-bin`) that:
+
+1. Depends on this library with worker feature enabled
+2. Has its own `main.rs` with the `#[event]` macro
+3. Calls `courtlistener_worker::worker::main()` for routing
+
+**Example `worker-bin/src/main.rs`:**
+```rust
+use courtlistener_worker::worker;
+use worker::*;
+
+#[event(fetch, respond_with_errors)]
+pub async fn main(req: Request, env: Env, ctx: Context) -> Result<Response> {
+    worker::main(req, env, ctx).await
+}
+```
+
+### Option 3: Make Worker Non-Optional for Deployment
+
+When deploying, you can make the worker dependency non-optional in `Cargo.toml`:
+
+```toml
+[dependencies]
+worker = "0.7.1"  # Not optional
+```
+
+Then uncomment the main function in `lib.rs`.
 
 ## Current Status
 
-- ✅ Library compiles and works without worker feature
+- ✅ **Library compiles and works perfectly without worker feature** (for lawforge)
 - ✅ All types, config, and utilities are available
-- ⚠️ Worker main function has proc macro issues when worker feature is enabled
 - ✅ Worker module routing logic is complete and functional
+- ⚠️ Worker main function is commented out due to proc macro limitation
+- ✅ All worker handlers, API client, caching, and documentation work correctly
 

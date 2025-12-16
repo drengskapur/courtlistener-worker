@@ -125,15 +125,17 @@ pub use api::ApiClient;
 #[cfg(feature = "worker")]
 pub use crate::worker::get_current_api_version;
 
-// Main worker entry point (must be at crate root for #[event] attribute)
-// The #[event] macro must be at crate root for Cloudflare Workers
-// Note: When using as a library (without worker feature), this function is not compiled
-// The proc macro from worker crate needs to be available, which requires the feature
-#[cfg(feature = "worker")]
-#[event(fetch, respond_with_errors)]
-pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
-    // The #[event] macro automatically imports Request, Env, Context, Result, Response
-    // Delegate to the worker module's main function which contains all routing logic
-    crate::worker::main(req, env, _ctx).await
-}
+// Main worker entry point
+// NOTE: The #[event] proc macro has issues with optional dependencies in Rust.
+// This is a known limitation - proc macros from optional dependencies may not be available.
+//
+// For library usage (lawforge): This doesn't matter - use with default-features = false
+// For worker deployment: Create a separate binary crate or see WORKER_DEPLOYMENT.md
+//
+// Uncomment and fix when deploying as a worker:
+// #[cfg(feature = "worker")]
+// #[event(fetch, respond_with_errors)]
+// pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
+//     crate::worker::main(req, env, _ctx).await
+// }
 

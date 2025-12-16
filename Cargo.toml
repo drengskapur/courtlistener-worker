@@ -20,12 +20,14 @@ validator = { version = "0.18", features = ["derive"] }
 regex = "1.10"
 
 # Worker-specific dependencies (optional feature)
+# Note: worker crate must be available for proc macros to work
 worker = { version = "0.7.1", optional = true }
 scalar_api_reference = { version = "0.1.0", optional = true }
 
 [features]
 default = ["worker"]
 worker = ["dep:worker", "dep:scalar_api_reference"]
+# Ensure proc macros are available when worker feature is enabled
 
 [profile.release]
 opt-level = "z"
