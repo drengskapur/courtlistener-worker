@@ -48,7 +48,12 @@ pub async fn main(
     env: worker::Env,
     _ctx: worker::Context,
 ) -> worker::Result<worker::Response> {
-    worker::console_log!("Request: {} {}", req.method(), req.path());
+    // Generate or retrieve request ID for tracing
+    let request_id = crate::utils::get_or_create_request_id(&req);
+    crate::utils::log_with_request_id(&request_id, "INFO", &format!("Request: {} {}", req.method(), req.path()));
+    
+    // Add request ID to response headers for client tracing
+    // Note: We'll add this to responses in a follow-up if needed
 
     Router::new()
         .get("/", |_req, _ctx| {
