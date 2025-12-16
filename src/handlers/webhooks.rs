@@ -1,5 +1,6 @@
 //! Webhook receiver handler
 
+use validator::Validate;
 use worker::*;
 
 /// Receive webhook events FROM CourtListener
@@ -23,8 +24,38 @@ pub async fn receive_webhook(_req: &Request, _env: &Env, body: &str) -> Result<R
     let payload: crate::WebhookEvent = serde_json::from_str(body)
         .map_err(|e| worker::Error::RustError(format!("Failed to parse webhook payload: {}", e)))?;
     
-    // TODO: Validate specific payload types based on event_type
-    // For example, if event_type is "pray_and_pay", deserialize and validate PrayAndPayWebhookPayload
+    // Validate specific payload types based on event_type
+    let event_type = payload.webhook.event_type.as_deref().unwrap_or("unknown");
+    match event_type {
+        "pray_and_pay" => {
+            // Deserialize and validate PrayAndPayWebhookPayload
+            let pray_pay: crate::PrayAndPayWebhookPayload = serde_json::from_value(payload.payload.clone())
+                .map_err(|e| worker::Error::RustError(format!("Failed to parse pray_and_pay payload: {}", e)))?;
+            
+            // Validate using validator crate
+            pray_pay.validate()
+                .map_err(|e| {
+                    let error_msg = e.field_errors()
+                        .iter()
+                        .map(|(field, errors)| {
+                            let details: Vec<String> = errors
+                                .iter()
+                                .map(|err| format!("{:?}", err.code))
+                                .collect();
+                            format!("{}: {}", field, details.join(", "))
+                        })
+                        .collect::<Vec<String>>()
+                        .join("; ");
+                    worker::Error::RustError(format!("Validation failed for pray_and_pay: {}", error_msg))
+                })?;
+            
+            worker::console_log!("Validated pray_and_pay webhook: id={}, status={}", pray_pay.id, pray_pay.status);
+        }
+        _ => {
+            // For other event types, just log them
+            worker::console_log!("Received webhook event type: {} (no specific validation)", event_type);
+        }
+    }
 
     // Log webhook details (without sensitive data)
     if let Some(key) = &idempotency_key {
