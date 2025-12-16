@@ -79,16 +79,13 @@ fn test_opinion_type_creation() {
         html: None,
         html_lawbox: None,
         html_columbia: None,
-        html_anon_2020: None,
         xml_harvard: None,
         html_with_citations: None,
         extracted_by_ocr: None,
-        ocr_confidence: None,
-        resource_uri: None,
+        opinions_cited: None,
         cluster_id: None,
         cluster: None,
         absolute_url: None,
-        opinions_cited: None,
     };
 
     assert_eq!(opinion.id, 123);
