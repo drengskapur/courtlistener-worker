@@ -29,7 +29,7 @@ pub async fn receive_webhook(_req: &Request, _env: &Env, body: &str) -> Result<R
     match event_type {
         "pray_and_pay" => {
             // Deserialize and validate PrayAndPayWebhookPayload
-            let pray_pay: crate::PrayAndPayWebhookPayload = serde_json::from_value(payload.payload.clone())
+            let pray_pay: crate::PrayAndPayWebhookPayload = serde_json::from_value(payload.payload)
                 .map_err(|e| worker::Error::RustError(format!("Failed to parse pray_and_pay payload: {}", e)))?;
             
             // Validate using validator crate
