@@ -43,7 +43,11 @@ pub async fn get_current_api_version() -> worker::Result<String> {
 
 /// Main worker entry point (called from crate root)
 /// This function contains all the routing logic
-pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
+pub async fn main(
+    req: worker::Request,
+    env: worker::Env,
+    _ctx: worker::Context,
+) -> worker::Result<worker::Response> {
     worker::console_log!("Request: {} {}", req.method(), req.path());
 
     Router::new()

@@ -123,17 +123,16 @@ pub use api::ApiClient;
 
 // Re-export worker functions when worker feature is enabled
 #[cfg(feature = "worker")]
-pub use worker::get_current_api_version;
+pub use crate::worker::get_current_api_version;
 
 // Main worker entry point (must be at crate root for #[event] attribute)
 // The #[event] macro must be at crate root for Cloudflare Workers
-// Note: This requires the worker feature to be enabled
-#[cfg(feature = "worker")]
-use worker::*;
-
+// Note: When using as a library (without worker feature), this function is not compiled
+// The proc macro from worker crate needs to be available, which requires the feature
 #[cfg(feature = "worker")]
 #[event(fetch, respond_with_errors)]
 pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
+    // The #[event] macro automatically imports Request, Env, Context, Result, Response
     // Delegate to the worker module's main function which contains all routing logic
     crate::worker::main(req, env, _ctx).await
 }
