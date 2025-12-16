@@ -1,0 +1,10 @@
+.cursor/rules/
+.devcontainer/
+.github/
+.venv/
+CONTRIBUTING.md
+LICENSE
+node_modules/
+NOTICE
+vendor/
+docs/
