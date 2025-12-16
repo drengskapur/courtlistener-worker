@@ -84,10 +84,12 @@ let court = Court {
 };
 ```
 
-### API Endpoints
+### API Endpoints (Worker Only)
+
+When deployed as a Cloudflare Worker:
 
 - `/api/*` - All CourtListener API endpoints
-- `/docs` - Interactive API documentation (Swagger UI, ReDoc, Scalar)
+- `/docs` - Interactive API documentation (Scalar)
 - `/health` - Health check
 - `/check-endpoints` - Endpoint coverage comparison
 
@@ -95,12 +97,10 @@ See the [API documentation](#api-documentation) for complete details.
 
 ## API Documentation
 
-Interactive API documentation is available at `/docs` when the worker is running:
+When running as a Cloudflare Worker, interactive API documentation is available at `/docs`:
 
-- **Swagger UI**: `/docs` or `/docs/swagger`
-- **ReDoc**: `/docs/redoc`
-- **Scalar**: `/docs/scalar`
-- **OpenAPI Spec**: `/docs/openapi.json`
+- **Scalar**: `/docs` - Modern, beautiful API documentation UI
+- **OpenAPI Spec**: `/docs/openapi.json` - Machine-readable OpenAPI specification
 
 The OpenAPI spec is auto-generated from the live CourtListener API. Use `?fresh=true` to generate a fresh spec on-demand.
 
