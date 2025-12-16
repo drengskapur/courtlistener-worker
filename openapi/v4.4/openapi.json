@@ -1,0 +1,15 @@
+{
+  "info": {
+    "description": "Auto-generated OpenAPI spec from CourtListener API",
+    "title": "CourtListener API",
+    "version": "v4.4"
+  },
+  "openapi": "3.0.3",
+  "paths": {},
+  "servers": [
+    {
+      "description": "CourtListener API",
+      "url": "https://www.courtlistener.com/api/rest/v4"
+    }
+  ]
+}
