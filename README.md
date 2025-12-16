@@ -1,5 +1,10 @@
 # CourtListener Worker
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
+[![Security Policy](https://img.shields.io/badge/Security-Policy-blue.svg)](SECURITY.md)
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://drengskapur.github.io/courtlistener-worker/)
+
 > A Cloudflare Worker written in Rust for interacting with the CourtListener API, with complete type definitions for all API responses.
 
 ## Table of Contents
@@ -92,10 +97,20 @@ For complete API details, see the [CourtListener API documentation](https://www.
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Security
+
+For security vulnerabilities, please see [SECURITY.md](SECURITY.md).
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for a list of changes.
 
 ## License
 
 MIT © CourtListener Worker Contributors
+
+See [LICENSE](LICENSE) for details.
