@@ -99,6 +99,7 @@ fn test_opinion_type_creation() {
         cluster_id: None,
         cluster: None,
         absolute_url: None,
+        opinions_cited: None,
     };
 
     assert_eq!(opinion.id, 123);
