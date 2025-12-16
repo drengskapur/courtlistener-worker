@@ -1,29 +1,17 @@
-# Environment files
+.DS_Store
 .env
 .env.local
-
-# Build artifacts
-target/
-dist/
-build/
-
-# Wrangler
-.wrangler/
-
-# IDE
 .idea/
 .vscode/
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
+.wrangler/
 *.log
-
-# Rust
-Cargo.lock
+*.swo
+*.swp
 **/*.rs.bk
+*~
+/.env
+build/
+Cargo.lock
+dist/
+target/
+Thumbs.db
