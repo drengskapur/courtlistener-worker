@@ -1,0 +1,26 @@
+# Code owners for courtlistener-worker
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Global owners
+* @drengskapur
+
+# Build and CI configuration
+/.github/ @drengskapur
+/build.rs @drengskapur
+/Cargo.toml @drengskapur
+/Cargo.lock @drengskapur
+
+# Source code
+/src/ @drengskapur
+
+# Tests
+/tests/ @drengskapur
+
+# Documentation
+*.md @drengskapur
+/docs/ @drengskapur
+
+# Configuration files
+/wrangler.toml @drengskapur
+/renovate.json @drengskapur
+

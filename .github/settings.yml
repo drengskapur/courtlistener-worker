@@ -1,0 +1,102 @@
+# Repository settings for courtlistener-worker
+# This file is used by probot/settings or similar GitHub Apps to configure repository settings
+
+repository:
+  # General settings
+  name: courtlistener-worker
+  description: A Cloudflare Worker written in Rust for interacting with the CourtListener API
+  homepage: https://github.com/drengskapur/courtlistener-worker
+  topics:
+    - rust
+    - cloudflare-workers
+    - courtlistener
+    - legal-api
+    - api-proxy
+    - openapi
+    - rest-api
+    - legal-tech
+
+  # Features
+  has_issues: true
+  has_projects: false
+  has_wiki: false
+  has_downloads: true
+  allow_squash_merge: true
+  allow_merge_commit: false
+  allow_rebase_merge: true
+  allow_auto_merge: true
+  delete_branch_on_merge: true
+
+  # Default branch protection
+  default_branch: main
+  branches:
+    - name: main
+      protection:
+        required_status_checks:
+          strict: true
+          contexts:
+            - "Test"
+            - "Clippy"
+            - "Format"
+        enforce_admins: true
+        required_pull_request_reviews:
+          required_approving_review_count: 1
+          dismiss_stale_reviews: true
+          require_code_owner_reviews: false
+          require_last_push_approval: false
+        restrictions: null
+        allow_force_pushes: false
+        allow_deletions: false
+        required_linear_history: false
+        required_conversation_resolution: true
+        lock_branch: false
+        allow_fork_syncing: false
+
+  # Labels
+  labels:
+    - name: bug
+      color: d73a4a
+      description: Something isn't working
+    - name: enhancement
+      color: a2eeef
+      description: New feature or request
+    - name: documentation
+      color: 0075ca
+      description: Improvements or additions to documentation
+    - name: question
+      color: d876e3
+      description: Further information is requested
+    - name: good first issue
+      color: 7057ff
+      description: Good for newcomers
+    - name: help wanted
+      color: 008672
+      description: Extra attention is needed
+    - name: invalid
+      color: e4e669
+      description: This doesn't seem right
+    - name: wontfix
+      color: ffffff
+      description: This will not be worked on
+    - name: dependencies
+      color: 0366d6
+      description: Pull requests that update a dependency file
+    - name: renovate
+      color: 1a1f71
+      description: Pull requests created by Renovate
+    - name: ci
+      color: 0e8a16
+      description: Changes to CI configuration files and scripts
+    - name: build
+      color: f9d0c4
+      description: Changes to build system or dependencies
+    - name: rust
+      color: 000000
+      description: Rust-specific changes
+    - name: api
+      color: 5319e7
+      description: API-related changes
+    - name: worker
+      color: 0e8a16
+      description: Cloudflare Worker changes
+
