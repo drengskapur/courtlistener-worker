@@ -3,8 +3,8 @@
 
 use courtlistener_worker::{
     API_BASE_URL, API_VERSION, API_VERSION_PATH, get_api_base_url,
-    Court, ApiCourt, CourtsResponse, Opinion, OpinionCluster, OpinionsResponse, 
-    Person, ApiPerson, PeopleResponse, Docket, DocketsResponse, ApiCitation, CitationsResponse,
+    Court, CourtsResponse, Opinion, OpinionsResponse, 
+    Person, PeopleResponse, Docket, DocketsResponse, ApiCitation, CitationsResponse,
 };
 
 #[test]

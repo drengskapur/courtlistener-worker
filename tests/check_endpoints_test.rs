@@ -264,7 +264,7 @@ mod tests {
             .and_then(|v| v.as_f64())
             .expect("percentage should be a number");
         assert!(
-            percentage >= 0.0 && percentage <= 100.0,
+            (0.0..=100.0).contains(&percentage),
             "Percentage should be between 0 and 100"
         );
 

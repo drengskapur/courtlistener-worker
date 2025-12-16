@@ -92,6 +92,7 @@ pub(crate) fn log_with_request_id(request_id: &str, level: &str, message: &str) 
 }
 
 /// Log a structured message with request ID and additional context
+#[allow(dead_code)]
 pub(crate) fn log_with_context(request_id: &str, level: &str, message: &str, context: &serde_json::Value) {
     worker::console_log!(
         "[{}] [{}] {} | Context: {}",

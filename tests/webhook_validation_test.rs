@@ -1,6 +1,6 @@
 //! Tests for webhook validation functionality
 
-use courtlistener_worker::{PrayAndPayWebhookPayload, RecapFetchWebhookPayload, WebhookEvent, WebhookMetadata};
+use courtlistener_worker::{PrayAndPayWebhookPayload, RecapFetchWebhookPayload, WebhookEvent};
 use validator::Validate;
 
 #[test]

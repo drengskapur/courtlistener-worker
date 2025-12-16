@@ -92,7 +92,7 @@ pub async fn proxy_api_request(req: &Request, env: &Env, body: Option<&str>) -> 
 
             // Add API token if available
             if let Ok(token) = env.secret("COURTLISTENER_API_TOKEN") {
-                headers.set("Authorization", &format!("Token {}", token.to_string()))?;
+                headers.set("Authorization", &format!("Token {}", token))?;
             }
 
             let init = RequestInit {
@@ -134,7 +134,7 @@ pub async fn proxy_api_request(req: &Request, env: &Env, body: Option<&str>) -> 
             )?;
 
             if let Ok(token) = env.secret("COURTLISTENER_API_TOKEN") {
-                headers.set("Authorization", &format!("Token {}", token.to_string()))?;
+                headers.set("Authorization", &format!("Token {}", token))?;
             }
 
             let init = RequestInit {

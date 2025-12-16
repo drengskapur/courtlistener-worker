@@ -66,7 +66,7 @@ pub async fn generate_openapi_spec(env: &Env) -> Result<Response> {
     if let Ok(token) = env.secret("COURTLISTENER_API_TOKEN") {
         root_req
             .headers_mut()?
-            .set("Authorization", &format!("Token {}", token.to_string()))?;
+            .set("Authorization", &format!("Token {}", token))?;
     }
 
     let mut root_resp = Fetch::Request(root_req).send().await?;
@@ -209,7 +209,7 @@ pub async fn check_endpoints(env: &Env) -> Result<Response> {
     if let Ok(token) = env.secret("COURTLISTENER_API_TOKEN") {
         root_req
             .headers_mut()?
-            .set("Authorization", &format!("Token {}", token.to_string()))?;
+            .set("Authorization", &format!("Token {}", token))?;
     }
 
     let mut root_resp = Fetch::Request(root_req).send().await?;
@@ -322,21 +322,19 @@ fn path_from_url_for_openapi(url: &str) -> String {
             path.push('/');
         }
         path
-    } else {
-        if let Some(path_start) = url.find("/api/rest/") {
-            let path = &url[path_start..];
-            let mut result = path.to_string();
-            if !result.ends_with('/') {
-                result.push('/');
-            }
-            result
-        } else {
-            let mut result = url.to_string();
-            if !result.ends_with('/') {
-                result.push('/');
-            }
-            result
+    } else if let Some(path_start) = url.find("/api/rest/") {
+        let path = &url[path_start..];
+        let mut result = path.to_string();
+        if !result.ends_with('/') {
+            result.push('/');
         }
+        result
+    } else {
+        let mut result = url.to_string();
+        if !result.ends_with('/') {
+            result.push('/');
+        }
+        result
     }
 }
 
@@ -367,8 +365,7 @@ fn infer_tag_for_openapi(pathname: &str) -> String {
 fn operation_id_for_openapi(pathname: &str, method: &str) -> String {
     let resource = pathname
         .trim_start_matches('/')
-        .replace('-', "_")
-        .replace('/', "_")
+        .replace(['-', '/'], "_")
         .trim_end_matches('_')
         .to_string();
 
@@ -450,27 +447,24 @@ async fn get_sample_for_openapi(
 
     if let Ok(token) = env.secret("COURTLISTENER_API_TOKEN") {
         if let Ok(headers) = req.headers_mut() {
-            let _ = headers.set("Authorization", &format!("Token {}", token.to_string()));
+            let _ = headers.set("Authorization", &format!("Token {}", token));
         }
     }
 
-    match Fetch::Request(req).send().await {
-        Ok(mut resp) => {
-            let status = resp.status_code();
-            if (200..300).contains(&status) {
-                if let Ok(text) = resp.text().await {
-                    if let Ok(data) = serde_json::from_str::<serde_json::Value>(&text) {
-                        if let Some(results) = data.get("results").and_then(|r| r.as_array()) {
-                            if let Some(first) = results.first() {
-                                return Some(schema_from_sample_for_openapi(first));
-                            }
+    if let Ok(mut resp) = Fetch::Request(req).send().await {
+        let status = resp.status_code();
+        if (200..300).contains(&status) {
+            if let Ok(text) = resp.text().await {
+                if let Ok(data) = serde_json::from_str::<serde_json::Value>(&text) {
+                    if let Some(results) = data.get("results").and_then(|r| r.as_array()) {
+                        if let Some(first) = results.first() {
+                            return Some(schema_from_sample_for_openapi(first));
                         }
-                        return Some(schema_from_sample_for_openapi(&data));
                     }
+                    return Some(schema_from_sample_for_openapi(&data));
                 }
             }
         }
-        Err(_) => {}
     }
 
     None

@@ -231,16 +231,14 @@ fn main() {
     let mut versions: Vec<(String, (u32, u32, u32))> = Vec::new();
 
     if let Ok(entries) = fs::read_dir(openapi_dir) {
-        for entry in entries {
-            if let Ok(entry) = entry {
-                let path = entry.path();
-                if path.is_dir() {
-                    if let Some(dir_name) = path.file_name().and_then(|n| n.to_str()) {
-                        // Try to parse as semantic version (v4.4 or v4.4.0 format)
-                        if let Some(version_str) = dir_name.strip_prefix('v') {
-                            if let Some(version) = parse_version(version_str) {
-                                versions.push((dir_name.to_string(), version));
-                            }
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                if let Some(dir_name) = path.file_name().and_then(|n| n.to_str()) {
+                    // Try to parse as semantic version (v4.4 or v4.4.0 format)
+                    if let Some(version_str) = dir_name.strip_prefix('v') {
+                        if let Some(version) = parse_version(version_str) {
+                            versions.push((dir_name.to_string(), version));
                         }
                     }
                 }

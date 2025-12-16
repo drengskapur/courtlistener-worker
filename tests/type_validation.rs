@@ -4,7 +4,6 @@
 //! by testing serialization/deserialization with known good data.
 
 use courtlistener_worker::*;
-use serde_json;
 
 #[test]
 fn test_court_type() {

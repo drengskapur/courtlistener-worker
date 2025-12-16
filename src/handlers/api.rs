@@ -39,7 +39,7 @@ pub async fn fetch_api_options(env: &Env, req: &Request) -> Result<Response> {
     if let Ok(token) = env.secret("COURTLISTENER_API_TOKEN") {
         api_req
             .headers_mut()?
-            .set("Authorization", &format!("Token {}", token.to_string()))?;
+            .set("Authorization", &format!("Token {}", token))?;
     }
 
     let mut resp = Fetch::Request(api_req).send().await?;
@@ -185,7 +185,7 @@ pub async fn fetch_search_post(env: &Env, req: &Request, body: &str) -> Result<R
 
     // Add API token if available
     if let Ok(token) = env.secret("COURTLISTENER_API_TOKEN") {
-        headers.set("Authorization", &format!("Token {}", token.to_string()))?;
+        headers.set("Authorization", &format!("Token {}", token))?;
     }
 
     let init = RequestInit {
@@ -322,7 +322,7 @@ pub async fn stream_audio_file(req: &Request, env: &Env) -> Result<Response> {
     }
 
     // Set Content-Disposition for file download
-    if let Some(filename) = audio_url.split('/').last() {
+    if let Some(filename) = audio_url.split('/').next_back() {
         headers.set(
             "Content-Disposition",
             &format!("attachment; filename=\"{}\"", filename),

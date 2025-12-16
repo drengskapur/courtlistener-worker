@@ -43,7 +43,7 @@ pub fn generate_cache_key(endpoint: &str, query: Option<&str>) -> String {
                 q.hash(&mut hasher);
                 format!("{}:q:{}", base_key, hasher.finish())
             } else {
-                format!("{}:{}", base_key, q.replace('&', "&").replace('=', "="))
+                format!("{}:{}", base_key, q)
             }
         } else {
             base_key.to_string()

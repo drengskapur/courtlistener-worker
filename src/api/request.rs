@@ -35,7 +35,7 @@ pub fn create_api_request(env: &Env, endpoint: &str, req: &Request) -> worker::R
     if let Ok(token) = env.secret("COURTLISTENER_API_TOKEN") {
         api_req
             .headers_mut()?
-            .set("Authorization", &format!("Token {}", token.to_string()))?;
+            .set("Authorization", &format!("Token {token}"))?;
     }
 
     Ok(api_req)
