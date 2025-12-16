@@ -125,7 +125,8 @@ async fn store_idempotency_key(env: &Env, key: &str) {
         let ttl = 604800u64; // 7 days in seconds
         
         // Store with timestamp as value (for debugging/analytics)
-        let value = crate::cache::now_seconds().to_string();
+        let timestamp = (js_sys::Date::now() as u64) / 1000;
+        let value = timestamp.to_string();
         
         if let Err(e) = kv
             .put(&cache_key, value.as_str())
