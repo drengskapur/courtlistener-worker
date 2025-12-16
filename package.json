@@ -7,6 +7,6 @@
 		"dev": "cargo install worker-build && wrangler dev --remote"
 	},
 	"devDependencies": {
-		"wrangler": "^7"
+		"wrangler": "^4"
 	}
 }
