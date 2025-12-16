@@ -1,9 +1,6 @@
 name = "courtlistener-worker"
-main = "target/wasm32-unknown-unknown/release/courtlistener-worker.wasm"
+main = "target/wasm32-unknown-unknown/release/courtlistener_worker.wasm"
 compatibility_date = "2024-01-01"
-
-[package]
-edition = "2021"
 
 # KV namespace for caching
 [[kv_namespaces]]
