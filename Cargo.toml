@@ -1,6 +1,6 @@
 [package]
 name = "courtlistener-worker"
-version = "0.1.0"
+version = "4.4.0"
 edition = "2021"
 authors = ["CourtListener Worker Contributors"]
 description = "A Cloudflare Worker written in Rust for interacting with the CourtListener API"
@@ -18,10 +18,16 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 scalar_api_reference = "0.1.0"
 validator = { version = "0.18", features = ["derive"] }
+regex = "1.10"
 
 [profile.release]
 opt-level = "z"
 lto = true
+
+[build-dependencies]
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+regex = "1.10"
+serde_json = "1.0"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
