@@ -1,5 +1,5 @@
 //! Type validation tests
-//! 
+//!
 //! Tests that verify our Rust types correctly match the TypeScript definitions
 //! by testing serialization/deserialization with known good data.
 
@@ -79,7 +79,10 @@ fn test_opinion_cluster() {
     assert_eq!(cluster.id, 12345);
     assert_eq!(cluster.case_name, Some("Roe v. Wade".to_string()));
     assert_eq!(cluster.citation_count, Some(1000));
-    assert_eq!(cluster.precedential_status, Some(PrecedentialStatus::Published));
+    assert_eq!(
+        cluster.precedential_status,
+        Some(PrecedentialStatus::Published)
+    );
 }
 
 #[test]
@@ -200,4 +203,3 @@ fn test_docket() {
     assert_eq!(docket.case_name, Some("Roe v. Wade".to_string()));
     assert_eq!(docket.docket_number, Some("70-18".to_string()));
 }
-

@@ -13,9 +13,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_fetch_parentheticals() {
-        let json = fetch_json("/parentheticals/?page_size=5").await
+        let json = fetch_json("/parentheticals/?page_size=5")
+            .await
             .expect("Failed to fetch parentheticals");
-        
+
         let value: serde_json::Value = match serde_json::from_str(&json) {
             Ok(v) => v,
             Err(_) => {
@@ -23,10 +24,9 @@ mod tests {
                 return;
             }
         };
-        
+
         if value.get("results").is_some() {
             println!("Parentheticals API returned valid response structure");
         }
     }
 }
-

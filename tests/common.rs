@@ -10,4 +10,3 @@ pub async fn fetch_json(endpoint: &str) -> Result<String, Box<dyn std::error::Er
     let text = response.text().await?;
     Ok(text)
 }
-

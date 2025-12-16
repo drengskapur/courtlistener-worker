@@ -3,7 +3,7 @@
 #[cfg(not(target_arch = "wasm32"))]
 mod tests {
     use courtlistener_worker::*;
-    
+
     async fn fetch_json(endpoint: &str) -> Result<String, Box<dyn std::error::Error>> {
         let api_base = std::env::var("COURTLISTENER_API_BASE_URL")
             .unwrap_or_else(|_| courtlistener_worker::API_BASE_URL.to_string());
@@ -15,17 +15,21 @@ mod tests {
 
     #[tokio::test]
     async fn test_fetch_citations() {
-        let json = fetch_json("/citations/?page_size=5").await
+        let json = fetch_json("/citations/?page_size=5")
+            .await
             .expect("Failed to fetch citations");
-        
+
         let value: serde_json::Value = match serde_json::from_str(&json) {
             Ok(v) => v,
             Err(e) => {
-                println!("Citations API returned non-JSON (might require auth): {}", e);
+                println!(
+                    "Citations API returned non-JSON (might require auth): {}",
+                    e
+                );
                 return;
             }
         };
-        
+
         if value.get("results").is_some() {
             match serde_json::from_str::<CitationsResponse>(&json) {
                 Ok(citations) => {
@@ -33,10 +37,12 @@ mod tests {
                     assert!(!citations.results.is_empty());
                 }
                 Err(e) => {
-                    println!("Failed to parse citations response (might require auth): {}", e);
+                    println!(
+                        "Failed to parse citations response (might require auth): {}",
+                        e
+                    );
                 }
             }
         }
     }
 }
-

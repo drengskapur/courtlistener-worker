@@ -13,9 +13,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_fetch_schools() {
-        let json = fetch_json("/schools/?page_size=5").await
+        let json = fetch_json("/schools/?page_size=5")
+            .await
             .expect("Failed to fetch schools");
-        
+
         let value: serde_json::Value = match serde_json::from_str(&json) {
             Ok(v) => v,
             Err(_) => {
@@ -23,10 +24,9 @@ mod tests {
                 return;
             }
         };
-        
+
         if value.get("results").is_some() {
             println!("Schools API returned valid response structure");
         }
     }
 }
-

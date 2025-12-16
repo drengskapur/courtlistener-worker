@@ -13,11 +13,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_search_result_deserialization() {
-        let json = fetch_json("/search/?q=constitution&page_size=3").await
+        let json = fetch_json("/search/?q=constitution&page_size=3")
+            .await
             .expect("Failed to fetch search results");
-        
-        let _value: serde_json::Value = serde_json::from_str(&json)
-            .expect("Failed to parse search response");
+
+        let _value: serde_json::Value =
+            serde_json::from_str(&json).expect("Failed to parse search response");
     }
 }
-
