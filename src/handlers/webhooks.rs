@@ -164,13 +164,12 @@ async fn store_idempotency_key(env: &Env, key: &str) {
         let timestamp = (js_sys::Date::now() as u64) / 1000;
         let value = timestamp.to_string();
         
-        let put_result = kv.put(&cache_key, value.as_str());
-        if let Err(e) = put_result
-            .expiration_ttl(ttl)
-            .execute()
-            .await
-        {
-            worker::console_log!("Failed to store idempotency key: {}", e);
+        // Use the builder pattern for KV put with expiration
+        match kv.put(&cache_key, value.as_str()) {
+            Ok(mut put_builder) => {
+                put_builder = put_builder.expiration_ttl(ttl);
+                if let Err(e) = put_builder.execute().await {
+                    worker::console_log!("Failed to store idempotency key: {}", e);
                 } else {
                     worker::console_log!("Stored idempotency key: {} (TTL: {}s)", key, ttl);
                 }
