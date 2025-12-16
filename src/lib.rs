@@ -16,11 +16,25 @@
 //!     abbreviation: Some("SCOTUS".to_string()),
 //! };
 //! ```
+//!
+//! # Client Usage
+//!
+//! ```no_run
+//! use courtlistener_worker::{ApiClient, CourtsResponse};
+//!
+//! // In your worker handler
+//! #[event(fetch)]
+//! async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Response> {
+//!     // Use the high-level client to fetch data
+//!     let courts: CourtsResponse = ApiClient::fetch_json(&env, "/courts/", &req).await?;
+//!     Response::from_json(&courts)
+//! }
+//! ```
 
 use worker::*;
 
 // Core modules
-mod api;
+pub mod api;
 mod cache;
 mod config;
 mod errors;
@@ -34,6 +48,9 @@ pub use types::*;
 
 // Re-export config constants for convenience
 pub use config::{get_api_base_url, API_BASE_URL, API_VERSION, API_VERSION_PATH};
+
+// Re-export high-level client interfaces
+pub use api::ApiClient;
 
 /// Get the current API version from CourtListener's GitHub repository changelog
 /// Returns the version in format "v4.4" (major.minor, no patch)
