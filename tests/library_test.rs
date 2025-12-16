@@ -100,7 +100,7 @@ fn test_opinions_response_deserialization() {
         "results": [
             {
                 "id": 123,
-                "case_name": "Test Case"
+                "cluster_id": 456
             }
         ]
     }"#;
