@@ -36,7 +36,7 @@ pub async fn receive_webhook(_req: &Request, env: &Env, body: &str) -> Result<Re
     let payload: crate::WebhookEvent = serde_json::from_str(body)
         .map_err(|e| worker::Error::RustError(format!("Failed to parse webhook payload: {}", e)))?;
     
-    // Validate specific payload types based on event_type
+    // Validate and deserialize specific payload types based on event_type
     let event_type = payload.webhook.event_type.as_deref().unwrap_or("unknown");
     match event_type {
         "pray_and_pay" => {
@@ -63,9 +63,45 @@ pub async fn receive_webhook(_req: &Request, env: &Env, body: &str) -> Result<Re
             
             worker::console_log!("Validated pray_and_pay webhook: id={}, status={}", pray_pay.id, pray_pay.status);
         }
+        "docket.alert" | "docket_alert" => {
+            // Deserialize DocketAlertWebhookPayload
+            let docket_alert: crate::DocketAlertWebhookPayload = serde_json::from_value(payload.payload)
+                .map_err(|e| worker::Error::RustError(format!("Failed to parse docket_alert payload: {}", e)))?;
+            
+            worker::console_log!("Received docket_alert webhook: {} results", docket_alert.results.len());
+        }
+        "search.alert" | "search_alert" => {
+            // Deserialize SearchAlertWebhookPayload
+            let search_alert: crate::SearchAlertWebhookPayload = serde_json::from_value(payload.payload)
+                .map_err(|e| worker::Error::RustError(format!("Failed to parse search_alert payload: {}", e)))?;
+            
+            worker::console_log!("Received search_alert webhook: {} results", search_alert.results.len());
+        }
+        "recap.fetch" | "recap_fetch" => {
+            // Deserialize RecapFetchWebhookPayload
+            let recap_fetch: crate::RecapFetchWebhookPayload = serde_json::from_value(payload.payload)
+                .map_err(|e| worker::Error::RustError(format!("Failed to parse recap_fetch payload: {}", e)))?;
+            
+            if let Some(id) = recap_fetch.id {
+                worker::console_log!("Received recap_fetch webhook: id={}, status={:?}", id, recap_fetch.status);
+            } else {
+                worker::console_log!("Received recap_fetch webhook: status={:?}", recap_fetch.status);
+            }
+        }
+        "old_docket.alert" | "old_docket_alert" => {
+            // Deserialize OldDocketAlertWebhookPayload
+            let old_alert: crate::OldDocketAlertWebhookPayload = serde_json::from_value(payload.payload)
+                .map_err(|e| worker::Error::RustError(format!("Failed to parse old_docket_alert payload: {}", e)))?;
+            
+            worker::console_log!(
+                "Received old_docket_alert webhook: {} old alerts, {} disabled alerts",
+                old_alert.old_alerts.len(),
+                old_alert.disabled_alerts.len()
+            );
+        }
         _ => {
-            // For other event types, just log them
-            worker::console_log!("Received webhook event type: {} (no specific validation)", event_type);
+            // For unknown event types, just log them
+            worker::console_log!("Received webhook event type: {} (no specific handler)", event_type);
         }
     }
 
