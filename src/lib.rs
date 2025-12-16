@@ -126,7 +126,11 @@ pub use api::ApiClient;
 pub use worker::get_current_api_version;
 
 // Main worker entry point (must be at crate root for #[event] attribute)
-// The #[event] macro automatically imports Request, Env, Context, Result, and Response
+// The #[event] macro must be at crate root for Cloudflare Workers
+// Note: This requires the worker feature to be enabled
+#[cfg(feature = "worker")]
+use worker::*;
+
 #[cfg(feature = "worker")]
 #[event(fetch, respond_with_errors)]
 pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
