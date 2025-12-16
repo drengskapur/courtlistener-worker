@@ -1,0 +1,518 @@
+//! Documentation handlers for OpenAPI, Swagger, ReDoc, and Scalar
+
+use worker::*;
+use crate::config::{get_api_base_url, get_cors_origins, API_VERSION};
+use crate::utils::json_response;
+
+/// Serve OpenAPI specification JSON
+/// Uses the complete OpenAPI spec generated from CourtListener API
+pub fn serve_openapi_spec() -> Result<Response> {
+    // Load the OpenAPI spec file embedded at compile time
+    const OPENAPI_SPEC: &str = include_str!("../../openapi/v4.3.0/openapi.json");
+    
+    // Parse and modify the spec to update server URL for the worker
+    let mut spec: serde_json::Value = serde_json::from_str(OPENAPI_SPEC)
+        .map_err(|e| worker::Error::RustError(format!("Failed to parse OpenAPI spec: {}", e)))?;
+    
+    // Update server URL to point to worker
+    if let Some(servers) = spec.get_mut("servers").and_then(|s| s.as_array_mut()) {
+        if let Some(server) = servers.get_mut(0) {
+            if let Some(url) = server.get_mut("url") {
+                *url = serde_json::json!("/api");
+            }
+            if let Some(desc) = server.get_mut("description") {
+                *desc = serde_json::json!("CourtListener Worker API");
+            }
+        }
+    }
+    
+    // Update info to reflect worker
+    if let Some(info) = spec.get_mut("info") {
+        if let Some(title) = info.get_mut("title") {
+            *title = serde_json::json!("CourtListener Worker API");
+        }
+        if let Some(desc) = info.get_mut("description") {
+            *desc = serde_json::json!("A Cloudflare Worker proxy for the CourtListener API v4.3.0. This spec is auto-generated from the live CourtListener API endpoints.");
+        }
+    }
+    
+    let spec_str = serde_json::to_string_pretty(&spec)?;
+    let mut response = Response::ok(spec_str)?;
+    let headers = response.headers_mut();
+    headers.set("Content-Type", "application/json")?;
+    headers.set("Access-Control-Allow-Origin", &get_cors_origins())?;
+    Ok(response)
+}
+
+/// Generate OpenAPI specification dynamically by fetching from CourtListener API
+/// This generates a fresh spec on-demand but may be slower due to multiple API calls
+/// Note: Limited to first 20 endpoints to avoid worker timeout
+pub async fn generate_openapi_spec(env: &Env) -> Result<Response> {
+    worker::console_log!("Generating OpenAPI spec on-demand...");
+    
+    let api_base = get_api_base_url();
+    let api_root = format!("{}/", api_base.trim_end_matches('/'));
+    
+    // Fetch root endpoint to get list of all endpoints
+    let mut root_req = Request::new(&api_root, Method::Get)?;
+    root_req.headers_mut()?.set("Accept", "application/json")?;
+    
+    if let Ok(token) = env.secret("COURTLISTENER_API_TOKEN") {
+        root_req.headers_mut()?.set("Authorization", &format!("Token {}", token.to_string()))?;
+    }
+    
+    let mut root_resp = Fetch::Request(root_req).send().await?;
+    let root: serde_json::Value = serde_json::from_str(&root_resp.text().await?)?;
+    
+    // Extract endpoint URLs
+    let endpoints: Vec<String> = root
+        .as_object()
+        .ok_or_else(|| worker::Error::RustError("Root response is not an object".to_string()))?
+        .values()
+        .filter_map(|v| {
+            v.as_str()
+                .filter(|s| s.starts_with("http"))
+                .map(|s| s.to_string())
+        })
+        .collect();
+    
+    worker::console_log!("Found {} endpoints to process", endpoints.len());
+    
+    // Build paths object
+    let mut paths = serde_json::Map::new();
+    
+    // Process first few endpoints (limit to avoid timeout)
+    let max_endpoints = 20;
+    for (idx, endpoint) in endpoints.iter().take(max_endpoints).enumerate() {
+        let pathname = path_from_url_for_openapi(endpoint);
+        worker::console_log!("Processing endpoint {}/{}: {}", idx + 1, max_endpoints.min(endpoints.len()), pathname);
+        
+        let sample_schema = get_sample_for_openapi(env, &api_base, &pathname).await;
+        let tag = infer_tag_for_openapi(&pathname);
+        let op_id = operation_id_for_openapi(&pathname, "GET");
+        
+        paths.insert(
+            pathname.clone(),
+            serde_json::json!({
+                "get": {
+                    "tags": [tag],
+                    "summary": format!("List {}", pathname.trim_end_matches('/')),
+                    "operationId": op_id,
+                    "parameters": [
+                        {
+                            "name": "page",
+                            "in": "query",
+                            "schema": { "type": "integer" },
+                            "required": false
+                        },
+                        {
+                            "name": "page_size",
+                            "in": "query",
+                            "schema": { "type": "integer" },
+                            "required": false
+                        },
+                        {
+                            "name": "cursor",
+                            "in": "query",
+                            "schema": { "type": "string" },
+                            "required": false
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "description": "Successful response",
+                            "content": {
+                                "application/json": {
+                                    "schema": sample_schema.unwrap_or_else(|| serde_json::json!({ "type": "object" }))
+                                }
+                            }
+                        }
+                    }
+                }
+            }),
+        );
+    }
+    
+    // Build final spec
+    let spec = serde_json::json!({
+        "openapi": "3.0.3",
+        "info": {
+            "title": "CourtListener Worker API",
+            "version": API_VERSION,
+            "description": format!("Dynamically generated OpenAPI spec from CourtListener API v{}. Generated on-demand.", API_VERSION)
+        },
+        "servers": [{
+            "url": "/api",
+            "description": "CourtListener Worker API"
+        }],
+        "paths": paths
+    });
+    
+    let spec_str = serde_json::to_string_pretty(&spec)?;
+    let mut response = Response::ok(spec_str)?;
+    let headers = response.headers_mut();
+    headers.set("Content-Type", "application/json")?;
+    headers.set("Access-Control-Allow-Origin", &get_cors_origins())?;
+    headers.set("Cache-Control", "no-cache")?;
+    Ok(response)
+}
+
+/// Serve API documentation UI (Swagger, Redoc, or Scalar)
+/// Supports ?fresh=true query parameter to use dynamically generated OpenAPI spec
+pub fn serve_docs_ui(ui_type: &str, req: &Request) -> Result<Response> {
+    let url = req.url()?;
+    let fresh = url.query_pairs()
+        .find(|(k, _)| k == "fresh")
+        .map(|(_, v)| v == "true")
+        .unwrap_or(false);
+    
+    let spec_url = if fresh {
+        "/docs/openapi.json?fresh=true"
+    } else {
+        "/docs/openapi.json"
+    };
+    
+    let html = match ui_type {
+        "swagger" => generate_swagger_html(spec_url),
+        "redoc" => generate_redoc_html(spec_url),
+        "scalar" => generate_scalar_html(spec_url),
+        _ => generate_swagger_html(spec_url),
+    };
+    
+    let mut response = Response::ok(html)?;
+    let headers = response.headers_mut();
+    headers.set("Content-Type", "text/html; charset=utf-8")?;
+    Ok(response)
+}
+
+/// Check which endpoints we support vs what's available in the live API
+/// Returns JSON with comparison results
+pub async fn check_endpoints(env: &Env) -> Result<Response> {
+    worker::console_log!("Checking endpoints against live API...");
+    
+    let api_base = get_api_base_url();
+    let api_root = format!("{}/", api_base.trim_end_matches('/'));
+    
+    // Fetch root endpoint to get list of all endpoints
+    let mut root_req = Request::new(&api_root, Method::Get)?;
+    root_req.headers_mut()?.set("Accept", "application/json")?;
+    
+    if let Ok(token) = env.secret("COURTLISTENER_API_TOKEN") {
+        root_req.headers_mut()?.set("Authorization", &format!("Token {}", token.to_string()))?;
+    }
+    
+    let mut root_resp = Fetch::Request(root_req).send().await?;
+    let root: serde_json::Value = serde_json::from_str(&root_resp.text().await?)?;
+    
+    // Extract endpoint names from API root response
+    let mut api_endpoints = std::collections::HashSet::new();
+    
+    if let Some(obj) = root.as_object() {
+        for (_, value) in obj {
+            if let Some(url_str) = value.as_str() {
+                if url_str.starts_with("http") && url_str.contains("/api/rest/v4/") {
+                    if let Some(path) = url_str.split("/api/rest/v4/").nth(1) {
+                        let endpoint = path.trim_end_matches('/');
+                        if !endpoint.is_empty() {
+                            api_endpoints.insert(endpoint.to_string());
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // Dynamically discover our supported endpoints
+    let our_endpoints: std::collections::HashSet<String> = discover_our_endpoints();
+    
+    let mut sorted_api: Vec<String> = api_endpoints.iter().cloned().collect();
+    sorted_api.sort();
+    
+    let mut sorted_ours: Vec<String> = our_endpoints.iter().cloned().collect();
+    sorted_ours.sort();
+    
+    let missing: Vec<String> = api_endpoints.difference(&our_endpoints).cloned().collect();
+    let extra: Vec<String> = our_endpoints.difference(&api_endpoints).cloned().collect();
+    
+    let result = serde_json::json!({
+        "api_endpoints": {
+            "total": api_endpoints.len(),
+            "list": sorted_api
+        },
+        "our_endpoints": {
+            "total": our_endpoints.len(),
+            "list": sorted_ours
+        },
+        "missing": {
+            "count": missing.len(),
+            "list": missing,
+            "note": "Missing endpoints can still be accessed via /api/proxy/*path"
+        },
+        "extra": {
+            "count": extra.len(),
+            "list": extra
+        },
+        "coverage": {
+            "percentage": if api_endpoints.is_empty() {
+                0.0
+            } else {
+                (our_endpoints.len() as f64 / api_endpoints.len() as f64) * 100.0
+            },
+            "all_covered": missing.is_empty()
+        }
+    });
+    
+    json_response(&result)
+}
+
+/// Discover which endpoints we support by examining our route patterns
+fn discover_our_endpoints() -> std::collections::HashSet<String> {
+    let mut endpoints = std::collections::HashSet::new();
+    
+    let route_patterns = [
+        "/api/courts",
+        "/api/courts/:id",
+        "/api/opinions",
+        "/api/clusters",
+        "/api/people",
+        "/api/dockets",
+        "/api/search",
+        "/api/citations",
+        "/api/audio",
+        "/api/docket-alerts",
+        "/api/docket-alerts/:id",
+        "/api/alerts",
+        "/api/alerts/:id",
+    ];
+    
+    for pattern in &route_patterns {
+        if let Some(endpoint_part) = pattern.strip_prefix("/api/") {
+            let endpoint = endpoint_part.split('/').next().unwrap_or(endpoint_part);
+            
+            if endpoint == "audio" && pattern.contains("/stream") {
+                continue;
+            }
+            
+            if !endpoint.is_empty() 
+                && endpoint != "proxy" 
+                && !endpoint.contains(':') {
+                endpoints.insert(endpoint.to_string());
+            }
+        }
+    }
+    
+    endpoints
+}
+
+// --- OpenAPI Helper Functions ---
+
+fn path_from_url_for_openapi(url: &str) -> String {
+    if let Ok(parsed) = worker::Url::parse(url) {
+        let mut path = parsed.path().to_string();
+        if !path.ends_with('/') {
+            path.push('/');
+        }
+        path
+    } else {
+        if let Some(path_start) = url.find("/api/rest/") {
+            let path = &url[path_start..];
+            let mut result = path.to_string();
+            if !result.ends_with('/') {
+                result.push('/');
+            }
+            result
+        } else {
+            let mut result = url.to_string();
+            if !result.ends_with('/') {
+                result.push('/');
+            }
+            result
+        }
+    }
+}
+
+fn infer_tag_for_openapi(pathname: &str) -> String {
+    let parts: Vec<&str> = pathname
+        .split('/')
+        .filter(|p| !p.is_empty() && !["api", "rest", "v4"].contains(p))
+        .collect();
+    
+    if parts.is_empty() {
+        "General".to_string()
+    } else {
+        parts[0]
+            .replace('-', " ")
+            .split_whitespace()
+            .map(|word| {
+                let mut chars = word.chars();
+                match chars.next() {
+                    None => String::new(),
+                    Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+                }
+            })
+            .collect::<Vec<_>>()
+            .join(" ")
+    }
+}
+
+fn operation_id_for_openapi(pathname: &str, method: &str) -> String {
+    let resource = pathname
+        .trim_start_matches('/')
+        .replace('-', "_")
+        .replace('/', "_")
+        .trim_end_matches('_')
+        .to_string();
+    
+    let method_lower = method.to_lowercase();
+    let prefix = if method == "GET" { "list" } else { method_lower.as_str() };
+    format!("{}_{}", prefix, if resource.is_empty() { "root" } else { &resource })
+}
+
+fn schema_from_sample_for_openapi(val: &serde_json::Value) -> serde_json::Value {
+    match val {
+        serde_json::Value::Null => serde_json::json!({ "type": "string", "nullable": true }),
+        serde_json::Value::Bool(_) => serde_json::json!({ "type": "boolean" }),
+        serde_json::Value::Number(n) => {
+            if n.is_i64() || n.is_u64() {
+                serde_json::json!({ "type": "integer" })
+            } else {
+                serde_json::json!({ "type": "number", "format": "float" })
+            }
+        }
+        serde_json::Value::String(_) => serde_json::json!({ "type": "string" }),
+        serde_json::Value::Array(arr) => {
+            if let Some(first) = arr.first() {
+                serde_json::json!({
+                    "type": "array",
+                    "items": schema_from_sample_for_openapi(first)
+                })
+            } else {
+                serde_json::json!({ "type": "array" })
+            }
+        }
+        serde_json::Value::Object(obj) => {
+            let mut properties = serde_json::Map::new();
+            for (key, val) in obj {
+                properties.insert(key.clone(), schema_from_sample_for_openapi(val));
+            }
+            serde_json::json!({
+                "type": "object",
+                "properties": properties
+            })
+        }
+    }
+}
+
+async fn get_sample_for_openapi(
+    env: &Env,
+    api_base: &str,
+    pathname: &str,
+) -> Option<serde_json::Value> {
+    let url = format!("{}{}?page_size=1", api_base.trim_end_matches('/'), pathname.trim_start_matches('/'));
+    
+    let mut req = match Request::new(&url, Method::Get) {
+        Ok(r) => r,
+        Err(_) => return None,
+    };
+    
+    if let Ok(mut headers) = req.headers_mut() {
+        if headers.set("Accept", "application/json").is_err() {
+            return None;
+        }
+    } else {
+        return None;
+    }
+    
+    if let Ok(token) = env.secret("COURTLISTENER_API_TOKEN") {
+        if let Ok(mut headers) = req.headers_mut() {
+            let _ = headers.set("Authorization", &format!("Token {}", token.to_string()));
+        }
+    }
+    
+    match Fetch::Request(req).send().await {
+        Ok(mut resp) => {
+            let status = resp.status_code();
+            if (200..300).contains(&status) {
+                if let Ok(text) = resp.text().await {
+                    if let Ok(data) = serde_json::from_str::<serde_json::Value>(&text) {
+                        if let Some(results) = data.get("results").and_then(|r| r.as_array()) {
+                            if let Some(first) = results.first() {
+                                return Some(schema_from_sample_for_openapi(first));
+                            }
+                        }
+                        return Some(schema_from_sample_for_openapi(&data));
+                    }
+                }
+            }
+        }
+        Err(_) => {}
+    }
+    
+    None
+}
+
+// --- Documentation UI HTML Generators ---
+
+fn generate_swagger_html(spec_url: &str) -> String {
+    format!(r#"<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CourtListener Worker API - Swagger UI</title>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui.css" />
+    <style>
+        html {{ box-sizing: border-box; overflow: -moz-scrollbars-vertical; overflow-y: scroll; }}
+        *, *:before, *:after {{ box-sizing: inherit; }}
+        body {{ margin:0; background: #fafafa; }}
+    </style>
+</head>
+<body>
+    <div id="swagger-ui"></div>
+    <script src="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui-bundle.js"></script>
+    <script src="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui-standalone-preset.js"></script>
+    <script>
+        window.onload = function() {{
+            const ui = SwaggerUIBundle({{
+                url: "{}",
+                dom_id: '#swagger-ui',
+                deepLinking: true,
+                presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+                plugins: [SwaggerUIBundle.plugins.DownloadUrl],
+                layout: "StandaloneLayout"
+            }});
+        }};
+    </script>
+</body>
+</html>"#, spec_url)
+}
+
+fn generate_redoc_html(spec_url: &str) -> String {
+    format!(r#"<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CourtListener Worker API - ReDoc</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700">
+    <style>body {{ margin: 0; padding: 0; }}</style>
+</head>
+<body>
+    <redoc spec-url="{}"></redoc>
+    <script src="https://unpkg.com/redoc@2.1.3/bundles/redoc.standalone.js"></script>
+</body>
+</html>"#, spec_url)
+}
+
+fn generate_scalar_html(spec_url: &str) -> String {
+    use scalar_api_reference::scalar_html_default;
+    
+    let config = serde_json::json!({
+        "url": spec_url,
+        "theme": "default",
+        "layout": "modern"
+    });
+    
+    scalar_html_default(&config)
+}
+
