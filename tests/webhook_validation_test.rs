@@ -159,3 +159,62 @@ fn test_pray_and_pay_from_webhook_event() {
     assert!(payload.validate().is_ok());
 }
 
+#[test]
+fn test_recap_fetch_webhook_payload_valid() {
+    let payload = RecapFetchWebhookPayload {
+        id: Some(123),
+        status: Some("completed".to_string()),
+        date_created: Some("2024-01-01T00:00:00Z".to_string()),
+        date_completed: Some("2024-01-02T00:00:00Z".to_string()),
+    };
+
+    assert!(payload.validate().is_ok());
+}
+
+#[test]
+fn test_recap_fetch_webhook_payload_invalid_id() {
+    let payload = RecapFetchWebhookPayload {
+        id: Some(0), // Invalid: must be >= 1 if Some
+        status: Some("completed".to_string()),
+        date_created: Some("2024-01-01T00:00:00Z".to_string()),
+        date_completed: None,
+    };
+
+    let result = payload.validate();
+    assert!(result.is_err());
+    
+    if let Err(errors) = result {
+        assert!(errors.field_errors().contains_key("id"));
+    }
+}
+
+#[test]
+fn test_recap_fetch_webhook_payload_invalid_status() {
+    let payload = RecapFetchWebhookPayload {
+        id: Some(123),
+        status: Some(String::new()), // Invalid: must have length >= 1 if Some
+        date_created: Some("2024-01-01T00:00:00Z".to_string()),
+        date_completed: None,
+    };
+
+    let result = payload.validate();
+    assert!(result.is_err());
+    
+    if let Err(errors) = result {
+        assert!(errors.field_errors().contains_key("status"));
+    }
+}
+
+#[test]
+fn test_recap_fetch_webhook_payload_valid_with_none() {
+    // Validation should pass when optional fields are None
+    let payload = RecapFetchWebhookPayload {
+        id: None,
+        status: None,
+        date_created: None,
+        date_completed: None,
+    };
+
+    assert!(payload.validate().is_ok());
+}
+
