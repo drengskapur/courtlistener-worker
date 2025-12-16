@@ -15,7 +15,7 @@ We actively support the latest stable version of this project. Security updates 
 
 Instead, please report them via one of the following methods:
 
-- **Email**: Open a security advisory at https://github.com/drengskapur/courtlistener-worker/security/advisories/new
+- **Email**: Open a security advisory at <https://github.com/drengskapur/courtlistener-worker/security/advisories/new>
 - **Private**: Use GitHub's private vulnerability reporting feature
 
 Please include the following information in your report:
@@ -46,4 +46,3 @@ When using this worker:
 - Set `CORS_ALLOWED_ORIGINS` to restrict access in production
 - Keep dependencies up to date (we use Dependabot for automated updates)
 - Review the [Security Considerations](README.md#security-considerations) section in the README
-

@@ -43,29 +43,34 @@ Enhancement suggestions are tracked as GitHub issues. When creating an enhanceme
 ## Development Setup
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/drengskapur/courtlistener-worker.git
    cd courtlistener-worker
    ```
 
 2. Install dependencies:
+
    ```bash
    rustup target add wasm32-unknown-unknown
    npm install -g wrangler
    ```
 
 3. Set up environment:
+
    ```bash
    cp .env.example .env
    # Edit .env with your API token
    ```
 
 4. Run tests:
+
    ```bash
    cargo test
    ```
 
 5. Run locally:
+
    ```bash
    npx wrangler dev
    ```
@@ -93,7 +98,8 @@ We use [Conventional Commits](https://www.conventionalcommits.org/):
 - `chore:` Maintenance tasks
 
 Example:
-```
+
+```plaintext
 feat(api): add support for new endpoint
 ```
 
@@ -120,4 +126,3 @@ feat(api): add support for new endpoint
 ## Questions?
 
 Feel free to open an issue with the `question` label if you have any questions about contributing.
-
