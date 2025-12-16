@@ -8,5 +8,6 @@ pub mod webhooks;
 
 pub use api::*;
 pub use docs::*;
+pub use health::*;
 pub use proxy::*;
 pub use webhooks::*;
