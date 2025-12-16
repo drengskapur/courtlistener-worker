@@ -5,12 +5,6 @@ compatibility_date = "2024-01-01"
 [build]
 command = "cargo install worker-build && worker-build --release"
 
-# KV namespace for caching
-[[kv_namespaces]]
-binding = "CACHE"
-id = "your-kv-namespace-id"  # Replace with actual KV namespace ID
-preview_id = "your-preview-kv-namespace-id"  # Replace with preview KV namespace ID
-
 [env.production]
 name = "courtlistener-worker"
 
