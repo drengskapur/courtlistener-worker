@@ -1,4 +1,4 @@
-//! Documentation handlers for OpenAPI, Swagger, ReDoc, and Scalar
+//! Documentation handlers for OpenAPI and Scalar
 
 use crate::config::{get_api_base_url, get_cors_origins, API_VERSION};
 use crate::utils::json_response;
@@ -170,9 +170,9 @@ pub async fn generate_openapi_spec(env: &Env) -> Result<Response> {
     Ok(response)
 }
 
-/// Serve API documentation UI (Swagger, Redoc, or Scalar)
+/// Serve API documentation UI (Scalar)
 /// Supports ?fresh=true query parameter to use dynamically generated OpenAPI spec
-pub fn serve_docs_ui(ui_type: &str, req: &Request) -> Result<Response> {
+pub fn serve_docs_ui(_ui_type: &str, req: &Request) -> Result<Response> {
     let url = req.url()?;
     let fresh = url
         .query_pairs()
@@ -186,12 +186,7 @@ pub fn serve_docs_ui(ui_type: &str, req: &Request) -> Result<Response> {
         "/docs/openapi.json"
     };
 
-    let html = match ui_type {
-        "swagger" => generate_swagger_html(spec_url),
-        "redoc" => generate_redoc_html(spec_url),
-        "scalar" => generate_scalar_html(spec_url),
-        _ => generate_swagger_html(spec_url),
-    };
+    let html = generate_scalar_html(spec_url);
 
     let mut response = Response::ok(html)?;
     let headers = response.headers_mut();
@@ -481,64 +476,7 @@ async fn get_sample_for_openapi(
     None
 }
 
-// --- Documentation UI HTML Generators ---
-
-fn generate_swagger_html(spec_url: &str) -> String {
-    format!(
-        r#"<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CourtListener Worker API - Swagger UI</title>
-    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui.css" />
-    <style>
-        html {{ box-sizing: border-box; overflow: -moz-scrollbars-vertical; overflow-y: scroll; }}
-        *, *:before, *:after {{ box-sizing: inherit; }}
-        body {{ margin:0; background: #fafafa; }}
-    </style>
-</head>
-<body>
-    <div id="swagger-ui"></div>
-    <script src="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui-bundle.js"></script>
-    <script src="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui-standalone-preset.js"></script>
-    <script>
-        window.onload = function() {{
-            const ui = SwaggerUIBundle({{
-                url: "{}",
-                dom_id: '#swagger-ui',
-                deepLinking: true,
-                presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
-                plugins: [SwaggerUIBundle.plugins.DownloadUrl],
-                layout: "StandaloneLayout"
-            }});
-        }};
-    </script>
-</body>
-</html>"#,
-        spec_url
-    )
-}
-
-fn generate_redoc_html(spec_url: &str) -> String {
-    format!(
-        r#"<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CourtListener Worker API - ReDoc</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700">
-    <style>body {{ margin: 0; padding: 0; }}</style>
-</head>
-<body>
-    <redoc spec-url="{}"></redoc>
-    <script src="https://unpkg.com/redoc@2.1.3/bundles/redoc.standalone.js"></script>
-</body>
-</html>"#,
-        spec_url
-    )
-}
+// --- Documentation UI HTML Generator ---
 
 fn generate_scalar_html(spec_url: &str) -> String {
     use scalar_api_reference::scalar_html_default;

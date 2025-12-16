@@ -3,22 +3,29 @@ name = "courtlistener-worker"
 version = "4.4.0"
 edition = "2021"
 authors = ["CourtListener Worker Contributors"]
-description = "A Cloudflare Worker written in Rust for interacting with the CourtListener API"
+description = "Rust library for the CourtListener API with complete type definitions and Cloudflare Worker support"
 license = "MIT"
 repository = "https://github.com/drengskapur/courtlistener-worker"
-keywords = ["courtlistener", "legal", "api", "cloudflare", "worker", "rust"]
+keywords = ["courtlistener", "legal", "api", "cloudflare", "worker", "rust", "library"]
 categories = ["web-programming", "api-bindings"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-worker = "0.7.1"
+# Core library dependencies (always included)
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-scalar_api_reference = "0.1.0"
 validator = { version = "0.18", features = ["derive"] }
 regex = "1.10"
+
+# Worker-specific dependencies (optional feature)
+worker = { version = "0.7.1", optional = true }
+scalar_api_reference = { version = "0.1.0", optional = true }
+
+[features]
+default = ["worker"]
+worker = ["dep:worker", "dep:scalar_api_reference"]
 
 [profile.release]
 opt-level = "z"
