@@ -1,6 +1,7 @@
 name = "courtlistener-worker"
 main = "build/index.js"
 compatibility_date = "2025-12-10"
+workers_dev = true
 
 [build]
-command = "cargo install worker-build@^0.7 && worker-build"
+command = "cargo install worker-build@^0.7 && worker-build --dev"
