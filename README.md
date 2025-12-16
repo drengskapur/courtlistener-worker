@@ -5,7 +5,7 @@ A Cloudflare Worker written in Rust for interacting with the CourtListener API, 
 ## Features
 
 - 🦀 100% Rust implementation
-- 📦 Complete type definitions for CourtListener API v4.3.0
+- 📦 Complete type definitions for CourtListener API v4.4.0
 - ⚡ Cloudflare Workers runtime
 - 🔒 Type-safe API interactions
 - 📚 Well-documented codebase
@@ -26,27 +26,32 @@ A Cloudflare Worker written in Rust for interacting with the CourtListener API, 
 ### Setup
 
 1. **Copy `.env.example` to `.env`** and add your API token:
+
    ```bash
    cp .env.example .env
    # Then edit .env and add your actual token
    ```
-   
+
    Or create `.env` manually:
+
    ```bash
    echo "COURTLISTENER_API_TOKEN=your_token_here" > .env
    ```
 
 2. **Optional: Set API base URL** (for testing different API versions):
+
    ```bash
    # In .env file:
    COURTLISTENER_API_BASE_URL=https://www.courtlistener.com/api/rest/v5
    ```
-   Defaults to `v4` path (API version 4.3.0) if not set.
+
+   Defaults to `v4` path (API version 4.4.0) if not set.
    
-   **Note:** The API path uses `/api/rest/v4/` but the actual API version is 4.3.0.
+   **Note:** The API path uses `/api/rest/v4/` but the actual API version is 4.4.0.
    The path remains "v4" for all 4.x versions.
 
 3. **Set Wrangler secret** (for production):
+
    ```bash
    npx wrangler secret put COURTLISTENER_API_TOKEN
    ```
@@ -91,9 +96,9 @@ The worker includes interactive API documentation powered by the complete CourtL
   - Default: Serves the embedded static spec (fast, cached)
   - With `?fresh=true`: Generates a fresh spec on-demand by querying the live CourtListener API (slower, always up-to-date)
 
-The OpenAPI spec is generated from the live CourtListener API endpoints and includes all available filters, parameters, and response schemas. 
+The OpenAPI spec is generated from the live CourtListener API endpoints and includes all available filters, parameters, and response schemas.
 
-**Note**: The dynamic generation (`?fresh=true`) is limited to the first 20 endpoints to avoid worker timeouts. The static spec is embedded at build time from `openapi/v4.3.0/openapi.json`.
+**Note**: The dynamic generation (`?fresh=true`) is limited to the first 20 endpoints to avoid worker timeouts. The static spec is embedded at build time from `openapi/v4.4.0/openapi.json`.
 
 ### Testing API Endpoints
 
@@ -220,6 +225,7 @@ The worker supports streaming large audio files efficiently using Cloudflare Wor
 - **Stream by ID**: `GET /api/audio/stream?id=12345` - Fetch metadata first, then stream the enhanced MP3 (local_path_mp3)
 
 **Features**:
+
 - ✅ Automatic streaming for large files (no memory limits)
 - ✅ Supports both original files (download_url) and enhanced MP3s (local_path_mp3)
 - ✅ Proper Content-Type and Content-Disposition headers
@@ -227,6 +233,7 @@ The worker supports streaming large audio files efficiently using Cloudflare Wor
 - ✅ 24-hour cache headers for performance
 
 **Example**:
+
 ```bash
 # Get audio metadata
 curl "http://localhost:8787/api/audio/12345" -H "Authorization: Token YOUR_TOKEN"
@@ -240,6 +247,7 @@ curl "http://localhost:8787/api/audio/stream?id=12345" -o audio.mp3
 The worker provides dedicated endpoints for managing alerts:
 
 **Docket Alerts** (`/api/docket-alerts`):
+
 - `GET /api/docket-alerts` - List your docket alert subscriptions
 - `POST /api/docket-alerts` - Create a new docket alert subscription
 - `GET /api/docket-alerts/:id` - Get a specific docket alert
@@ -247,6 +255,7 @@ The worker provides dedicated endpoints for managing alerts:
 - `DELETE /api/docket-alerts/:id` - Delete a docket alert
 
 **Search Alerts** (`/api/alerts`):
+
 - `GET /api/alerts` - List your search alert subscriptions
 - `POST /api/alerts` - Create a new search alert
 - `GET /api/alerts/:id` - Get a specific search alert
@@ -260,6 +269,7 @@ The worker provides dedicated endpoints for managing alerts:
 **Webhook Receiver Endpoint**: `/webhook` or `/webhook/{secret}`
 
 To set up webhook reception:
+
 1. Deploy this worker and point your domain to it (e.g., `https://your-domain.com`)
 2. Configure webhook endpoints in your CourtListener account:
    - Endpoint URL: `https://your-domain.com/webhook` (or `/webhook/{secret}` for additional security)
@@ -267,11 +277,13 @@ To set up webhook reception:
 3. The worker will receive POST requests from CourtListener at `/webhook`
 
 **Webhook Security**:
+
 - CourtListener sends webhooks from IPs: `34.210.230.218` or `54.189.59.91`
 - Each event includes an `Idempotency-Key` header for deduplication
 - Use `/webhook/{secret}` with a long random secret for additional security
 
 **Webhook Event Types**:
+
 - Docket Alert Events - When dockets are updated
 - Search Alert Events - When search queries have new results
 - Old Docket Alert Events - When alerts are about to be disabled
@@ -281,6 +293,7 @@ To set up webhook reception:
 **Note**: The webhook receiver endpoint currently logs events. You'll need to add your own processing logic (store in database, forward to another service, etc.) in the `receive_webhook` function.
 
 **Other Webhook-related APIs** (accessible via the proxy endpoint):
+
 - `/api/proxy/recap-fetch/` - Monitor RECAP Fetch requests
 - `/api/proxy/pray-and-pay/` - Manage Pray and Pay requests
 
@@ -333,4 +346,3 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License
 
 MIT License - see [LICENSE](LICENSE) file for details
-
