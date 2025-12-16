@@ -78,14 +78,31 @@ pub async fn receive_webhook(_req: &Request, env: &Env, body: &str) -> Result<Re
             worker::console_log!("Received search_alert webhook: {} results", search_alert.results.len());
         }
         "recap.fetch" | "recap_fetch" => {
-            // Deserialize RecapFetchWebhookPayload
+            // Deserialize and validate RecapFetchWebhookPayload
             let recap_fetch: crate::RecapFetchWebhookPayload = serde_json::from_value(payload.payload)
                 .map_err(|e| worker::Error::RustError(format!("Failed to parse recap_fetch payload: {}", e)))?;
             
+            // Validate using validator crate (only validates Some values)
+            recap_fetch.validate()
+                .map_err(|e| {
+                    let error_msg = e.field_errors()
+                        .iter()
+                        .map(|(field, errors)| {
+                            let details: Vec<String> = errors
+                                .iter()
+                                .map(|err| format!("{:?}", err.code))
+                                .collect();
+                            format!("{}: {}", field, details.join(", "))
+                        })
+                        .collect::<Vec<String>>()
+                        .join("; ");
+                    worker::Error::RustError(format!("Validation failed for recap_fetch: {}", error_msg))
+                })?;
+            
             if let Some(id) = recap_fetch.id {
-                worker::console_log!("Received recap_fetch webhook: id={}, status={:?}", id, recap_fetch.status);
+                worker::console_log!("Validated recap_fetch webhook: id={}, status={:?}", id, recap_fetch.status);
             } else {
-                worker::console_log!("Received recap_fetch webhook: status={:?}", recap_fetch.status);
+                worker::console_log!("Validated recap_fetch webhook: status={:?}", recap_fetch.status);
             }
         }
         "old_docket.alert" | "old_docket_alert" => {

@@ -39,10 +39,13 @@ pub struct OldDocketAlertWebhookPayload {
 }
 
 /// RECAP Fetch webhook payload
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
 pub struct RecapFetchWebhookPayload {
+    #[validate(range(min = 1))]
     pub id: Option<u32>,
+    #[validate(length(min = 1))]
     pub status: Option<String>,
+    #[validate(length(min = 1))]
     pub date_created: Option<String>,
     pub date_completed: Option<String>,
     // Add other RECAP Fetch fields as needed
