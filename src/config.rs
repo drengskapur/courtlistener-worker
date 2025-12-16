@@ -1,0 +1,27 @@
+//! Configuration constants and helpers
+
+/// CourtListener API version (semantic version)
+/// Note: The API path uses "v4" but the actual API version is 4.3.0
+pub const API_VERSION: &str = "4.3.0";
+
+/// CourtListener API version path (used in URLs)
+/// The API path is always "v4" regardless of patch version
+pub const API_VERSION_PATH: &str = "v4";
+
+/// CourtListener API base URL (constructed from version path)
+/// Can be overridden with COURTLISTENER_API_BASE_URL environment variable
+pub const API_BASE_URL: &str = "https://www.courtlistener.com/api/rest/v4";
+
+/// Get the API base URL from environment or construct from version path constant
+pub fn get_api_base_url() -> String {
+    std::env::var("COURTLISTENER_API_BASE_URL").unwrap_or_else(|_| {
+        format!("https://www.courtlistener.com/api/rest/{}", API_VERSION_PATH)
+    })
+}
+
+/// Get CORS allowed origins from environment or use default
+pub fn get_cors_origins() -> String {
+    std::env::var("CORS_ALLOWED_ORIGINS")
+        .unwrap_or_else(|_| "*".to_string())
+}
+
