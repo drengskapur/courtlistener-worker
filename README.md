@@ -27,16 +27,19 @@ This worker provides a type-safe Rust interface to the CourtListener API, runnin
 ### Setup
 
 1. Copy `.env.example` to `.env` and add your API token:
+
    ```bash
    cp .env.example .env
    ```
 
 2. (Optional) Set API base URL:
+
    ```bash
    COURTLISTENER_API_BASE_URL=https://www.courtlistener.com/api/rest/v4
    ```
 
 3. For production, set Wrangler secret:
+
    ```bash
    npx wrangler secret put COURTLISTENER_API_TOKEN
    ```
