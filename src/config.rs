@@ -17,13 +17,14 @@ pub const API_BASE_URL: &str = "https://www.courtlistener.com/api/rest/v4";
 /// Get the API base URL from environment or construct from version path constant
 pub fn get_api_base_url() -> String {
     std::env::var("COURTLISTENER_API_BASE_URL").unwrap_or_else(|_| {
-        format!("https://www.courtlistener.com/api/rest/{}", API_VERSION_PATH)
+        format!(
+            "https://www.courtlistener.com/api/rest/{}",
+            API_VERSION_PATH
+        )
     })
 }
 
 /// Get CORS allowed origins from environment or use default
 pub fn get_cors_origins() -> String {
-    std::env::var("CORS_ALLOWED_ORIGINS")
-        .unwrap_or_else(|_| "*".to_string())
+    std::env::var("CORS_ALLOWED_ORIGINS").unwrap_or_else(|_| "*".to_string())
 }
-

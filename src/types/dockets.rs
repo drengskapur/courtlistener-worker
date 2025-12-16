@@ -1,7 +1,7 @@
 //! Docket types
 
-use serde::{Deserialize, Serialize};
 use crate::types::common::PaginatedResponse;
+use serde::{Deserialize, Serialize};
 
 /// Docket (case information)
 #[derive(Debug, Clone, Serialize, Deserialize)]

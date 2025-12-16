@@ -10,5 +10,3 @@ pub struct School {
     pub city: Option<String>,
     pub state: Option<String>,
 }
-
-

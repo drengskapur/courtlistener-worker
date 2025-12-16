@@ -1,7 +1,7 @@
 //! Opinion and OpinionCluster types
 
-use serde::{Deserialize, Serialize};
 use crate::types::common::{PaginatedResponse, PrecedentialStatus};
+use serde::{Deserialize, Serialize};
 
 /// Opinion cluster (group of related opinions)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -99,4 +99,3 @@ pub type OpinionClustersResponse = PaginatedResponse<ApiOpinionCluster>;
 
 /// Paginated opinions response
 pub type OpinionsResponse = PaginatedResponse<ApiOpinion>;
-

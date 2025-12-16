@@ -1,7 +1,7 @@
 //! Citation types
 
-use serde::{Deserialize, Serialize};
 use crate::types::common::PaginatedResponse;
+use serde::{Deserialize, Serialize};
 
 /// Citation lookup
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -1,7 +1,7 @@
 //! People (judges, attorneys, court personnel) types
 
-use serde::{Deserialize, Serialize};
 use crate::types::common::PaginatedResponse;
+use serde::{Deserialize, Serialize};
 
 /// Person (judge, attorney, etc.)
 #[derive(Debug, Clone, Serialize, Deserialize)]

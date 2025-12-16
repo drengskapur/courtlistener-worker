@@ -1,13 +1,13 @@
 //! Caching utilities for the CourtListener Worker
-//! 
+//!
 //! Provides:
 //! - KV-based distributed caching
 //! - HTTP cache header management
 //! - Cache key generation
 //! - TTL management
 
-use worker::*;
 use serde::{Deserialize, Serialize};
+use worker::*;
 
 /// Cache configuration
 #[allow(dead_code)]
@@ -24,7 +24,7 @@ impl Default for CacheConfig {
     fn default() -> Self {
         Self {
             default_ttl: 600, // 10 minutes
-            max_ttl: 3600,   // 1 hour
+            max_ttl: 3600,    // 1 hour
             use_kv: true,
         }
     }
@@ -121,23 +121,32 @@ pub fn add_cache_headers(headers: &mut Headers, cache_ttl: u64, from_cache: bool
     if from_cache {
         // If served from cache, indicate it's cached
         headers.set("X-Cache", "HIT")?;
-        headers.set("Cache-Control", &format!("public, max-age={}, s-maxage={}", cache_ttl, cache_ttl))?;
+        headers.set(
+            "Cache-Control",
+            &format!("public, max-age={}, s-maxage={}", cache_ttl, cache_ttl),
+        )?;
     } else {
         // If not from cache, set cache headers for future requests
         headers.set("X-Cache", "MISS")?;
-        headers.set("Cache-Control", &format!("public, max-age={}, s-maxage={}", cache_ttl, cache_ttl))?;
+        headers.set(
+            "Cache-Control",
+            &format!("public, max-age={}, s-maxage={}", cache_ttl, cache_ttl),
+        )?;
         // Add ETag support for conditional requests
         headers.set("Vary", "Accept, Authorization")?;
     }
-    
+
     // Add stale-while-revalidate for better performance
-    headers.set("Cache-Control", &format!(
-        "public, max-age={}, s-maxage={}, stale-while-revalidate={}",
-        cache_ttl,
-        cache_ttl,
-        cache_ttl / 2
-    ))?;
-    
+    headers.set(
+        "Cache-Control",
+        &format!(
+            "public, max-age={}, s-maxage={}, stale-while-revalidate={}",
+            cache_ttl,
+            cache_ttl,
+            cache_ttl / 2
+        ),
+    )?;
+
     Ok(())
 }
 
@@ -157,7 +166,7 @@ impl CacheEntry {
         let now = js_sys::Date::now() as u64 / 1000;
         now > (self.timestamp + self.ttl)
     }
-    
+
     fn new(data: String, ttl: u64) -> Self {
         let timestamp = js_sys::Date::now() as u64 / 1000;
         Self {
@@ -196,4 +205,3 @@ pub async fn set_cached_with_expiry(env: &Env, key: &str, value: &str, ttl: u64)
         set_cached_response(env, key, &json, ttl + 60).await; // Add 1 minute buffer for expiration
     }
 }
-

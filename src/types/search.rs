@@ -37,4 +37,3 @@ pub struct SearchResult {
     pub slug: Option<String>,
     pub absolute_url: Option<String>,
 }
-

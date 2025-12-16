@@ -29,5 +29,3 @@ pub struct FJCDatabase {
     pub court: Option<String>,
     pub source_url: Option<String>,
 }
-
-

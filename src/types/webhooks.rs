@@ -27,7 +27,7 @@ pub struct DocketAlertWebhookPayload {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SearchAlertWebhookPayload {
     pub results: Vec<serde_json::Value>, // Search results (based on Search API)
-    pub alert: serde_json::Value, // Search Alert details
+    pub alert: serde_json::Value,        // Search Alert details
 }
 
 /// Old Docket Alert webhook payload
@@ -52,7 +52,6 @@ pub struct RecapFetchWebhookPayload {
 pub struct PrayAndPayWebhookPayload {
     pub id: u32,
     pub date_created: String,
-    pub status: u32, // 1 = Waiting, 2 = Granted
+    pub status: u32,         // 1 = Waiting, 2 = Granted
     pub recap_document: u32, // RECAP document ID
 }
-

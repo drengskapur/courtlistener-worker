@@ -1,7 +1,7 @@
 //! Alert types for CourtListener API
 
-use serde::{Deserialize, Serialize};
 use crate::types::common::PaginatedResponse;
+use serde::{Deserialize, Serialize};
 
 /// Docket Alert - subscription to receive notifications when a docket is updated
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -11,8 +11,8 @@ pub struct DocketAlert {
     pub date_last_hit: Option<String>,
     pub secret_key: Option<String>,
     pub alert_type: Option<u32>, // 0 = disabled, 1 = enabled
-    pub docket: Option<u32>, // Docket ID
-    pub docket_id: Option<u32>, // Alternative field name
+    pub docket: Option<u32>,     // Docket ID
+    pub docket_id: Option<u32>,  // Alternative field name
 }
 
 /// Search Alert - subscription to receive notifications when search results change
@@ -59,5 +59,3 @@ pub enum AlertType {
 /// API response types
 pub type DocketAlertsResponse = PaginatedResponse<DocketAlert>;
 pub type SearchAlertsResponse = PaginatedResponse<SearchAlert>;
-
-

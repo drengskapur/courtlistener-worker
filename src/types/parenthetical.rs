@@ -9,4 +9,3 @@ pub struct Parenthetical {
     pub text: Option<String>,
     pub opinion_id: Option<u32>,
 }
-

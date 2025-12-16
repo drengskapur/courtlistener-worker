@@ -1,7 +1,7 @@
 //! Audio types
 
-use serde::{Deserialize, Serialize};
 use crate::types::common::PaginatedResponse;
+use serde::{Deserialize, Serialize};
 
 /// Audio recording (oral argument)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -19,9 +19,9 @@ pub struct Audio {
     pub date_argued: Option<String>,
     pub court: Option<String>, // URL or court_id
     pub court_id: Option<String>,
-    pub download_url: Option<String>, // Original file from court
+    pub download_url: Option<String>,   // Original file from court
     pub local_path_mp3: Option<String>, // Enhanced MP3 file path
-    pub duration: Option<f64>, // Duration in seconds (estimated)
+    pub duration: Option<f64>,          // Duration in seconds (estimated)
     pub sha1: Option<String>,
     pub filepath_ia: Option<String>, // Internet Archive path
     pub filepath_ia_json: Option<String>,

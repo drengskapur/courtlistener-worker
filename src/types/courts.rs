@@ -1,7 +1,7 @@
 //! Court types and API responses
 
-use serde::{Deserialize, Serialize};
 use crate::types::common::PaginatedResponse;
+use serde::{Deserialize, Serialize};
 
 /// Court information
 #[derive(Debug, Clone, Serialize, Deserialize)]

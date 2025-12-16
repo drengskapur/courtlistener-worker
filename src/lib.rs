@@ -1,13 +1,13 @@
 //! CourtListener API Cloudflare Worker
-//! 
+//!
 //! A Cloudflare Worker for interacting with the CourtListener API,
 //! with Rust types for all API responses.
-//! 
+//!
 //! # Example
-//! 
+//!
 //! ```no_run
 //! use courtlistener_worker::*;
-//! 
+//!
 //! // Types are available for use in your worker
 //! let court = Court {
 //!     id: "us".to_string(),
@@ -33,38 +33,39 @@ mod utils;
 pub use types::*;
 
 // Re-export config constants for convenience
-pub use config::{API_VERSION, API_VERSION_PATH, API_BASE_URL, get_api_base_url};
+pub use config::{get_api_base_url, API_BASE_URL, API_VERSION, API_VERSION_PATH};
 
 /// Get the current API version from CourtListener's GitHub repository changelog
 /// Returns the version in format "v4.4" (major.minor, no patch)
 /// This fetches the latest version from the changelog at runtime
 pub async fn get_current_api_version() -> worker::Result<String> {
     let url = "https://raw.githubusercontent.com/freelawproject/courtlistener/refs/heads/main/cl/api/templates/rest-change-log.html";
-    
+
     let req = Request::new(url, Method::Get)?;
     let mut resp = Fetch::Request(req).send().await?;
-    
+
     if !resp.status_code().eq(&200) {
         return Err(worker::Error::RustError(format!(
-            "Failed to fetch changelog: HTTP {}", resp.status_code()
+            "Failed to fetch changelog: HTTP {}",
+            resp.status_code()
         )));
     }
-    
+
     let html = resp.text().await?;
-    
+
     // Look for the first version entry in the changelog: <strong>v4.4</strong>
     // The changelog lists versions with the latest first
     let re = regex::Regex::new(r"<strong>v(\d+)\.(\d+)")
         .map_err(|e| worker::Error::RustError(format!("Failed to create regex: {}", e)))?;
-    
+
     if let Some(caps) = re.captures(&html) {
         if let (Some(major), Some(minor)) = (caps.get(1), caps.get(2)) {
             return Ok(format!("v{}.{}", major.as_str(), minor.as_str()));
         }
     }
-    
+
     Err(worker::Error::RustError(
-        "Could not find version pattern in GitHub changelog".to_string()
+        "Could not find version pattern in GitHub changelog".to_string(),
     ))
 }
 
@@ -73,24 +74,38 @@ pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Respo
     worker::console_log!("Request: {} {}", req.method(), req.path());
 
     Router::new()
-        .get("/", |_req, _ctx| Response::ok("CourtListener Worker API\n\nVisit /docs for API documentation"))
+        .get("/", |_req, _ctx| {
+            Response::ok("CourtListener Worker API\n\nVisit /docs for API documentation")
+        })
         .get("/health", |_req, _ctx| Response::ok("OK"))
         // Endpoint comparison tool
         .get_async("/check-endpoints", |_req, ctx| async move {
             handlers::check_endpoints(&ctx.env).await
         })
         // API Documentation
-        .get("/docs", |req, _ctx| handlers::serve_docs_ui("swagger", &req))
-        .get("/docs/swagger", |req, _ctx| handlers::serve_docs_ui("swagger", &req))
-        .get("/docs/redoc", |req, _ctx| handlers::serve_docs_ui("redoc", &req))
-        .get("/docs/scalar", |req, _ctx| handlers::serve_docs_ui("scalar", &req))
+        .get("/docs", |req, _ctx| {
+            handlers::serve_docs_ui("swagger", &req)
+        })
+        .get("/docs/swagger", |req, _ctx| {
+            handlers::serve_docs_ui("swagger", &req)
+        })
+        .get("/docs/redoc", |req, _ctx| {
+            handlers::serve_docs_ui("redoc", &req)
+        })
+        .get("/docs/scalar", |req, _ctx| {
+            handlers::serve_docs_ui("scalar", &req)
+        })
         .get_async("/docs/openapi.json", |req, ctx| async move {
             // Check if ?fresh=true to generate on-demand, otherwise use static file
             let url = req.url().ok();
-            let fresh = url.and_then(|u| {
-                u.query_pairs().find(|(k, _)| k == "fresh").map(|(_, v)| v == "true")
-            }).unwrap_or(false);
-            
+            let fresh = url
+                .and_then(|u| {
+                    u.query_pairs()
+                        .find(|(k, _)| k == "fresh")
+                        .map(|(_, v)| v == "true")
+                })
+                .unwrap_or(false);
+
             if fresh {
                 handlers::generate_openapi_spec(&ctx.env).await
             } else {

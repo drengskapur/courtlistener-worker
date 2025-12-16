@@ -5,23 +5,25 @@ use worker::*;
 /// Sanitize error messages to prevent sensitive data leaks
 pub(crate) fn sanitize_error(text: &str) -> String {
     // Truncate long error messages
-    let truncated = if text.len() > 200 {
-        &text[..200]
-    } else {
-        text
-    };
+    let truncated = if text.len() > 200 { &text[..200] } else { text };
     truncated.to_string()
 }
 
 /// Create CORS preflight response for OPTIONS requests
 pub(crate) fn cors_preflight_response() -> worker::Result<Response> {
     use crate::config::get_cors_origins;
-    
+
     let mut response = Response::ok("")?;
     let headers = response.headers_mut();
     headers.set("Access-Control-Allow-Origin", &get_cors_origins())?;
-    headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")?;
-    headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization")?;
+    headers.set(
+        "Access-Control-Allow-Methods",
+        "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+    )?;
+    headers.set(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Authorization",
+    )?;
     headers.set("Access-Control-Max-Age", "86400")?;
     Ok(response)
 }
@@ -41,20 +43,25 @@ pub(crate) fn json_response_with_cache<T: serde::Serialize>(
 ) -> worker::Result<Response> {
     use crate::cache::{add_cache_headers, get_cache_ttl};
     use crate::config::get_cors_origins;
-    
+
     let mut response = Response::from_json(data)?;
     let headers = response.headers_mut();
     headers.set("Access-Control-Allow-Origin", &get_cors_origins())?;
-    headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")?;
-    headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization")?;
+    headers.set(
+        "Access-Control-Allow-Methods",
+        "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+    )?;
+    headers.set(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Authorization",
+    )?;
     headers.set("Content-Type", "application/json")?;
-    
+
     // Add cache headers if endpoint is provided
     if let Some(endpoint) = endpoint {
         let cache_ttl = get_cache_ttl(endpoint);
         add_cache_headers(headers, cache_ttl, from_cache)?;
     }
-    
+
     Ok(response)
 }
-
