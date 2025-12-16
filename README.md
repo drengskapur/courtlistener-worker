@@ -54,12 +54,18 @@ This worker provides a type-safe Rust interface to the CourtListener API, runnin
 ### Development
 
 ```bash
-# Run locally
-npx wrangler dev
+# Run in remote development mode (recommended)
+npm run dev
+# or
+npx wrangler dev --remote
 
 # Deploy
+npm run deploy
+# or
 npx wrangler deploy
 ```
+
+**Note:** If you encounter GLIBC version issues with local development, use `--remote` flag to run the worker in Cloudflare's environment.
 
 ### Basic Example
 
