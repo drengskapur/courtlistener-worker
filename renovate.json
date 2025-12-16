@@ -1,78 +1,53 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended"
-  ],
+  "extends": ["config:recommended"],
+
+  "timezone": "America/New_York",
+  "schedule": ["before 10am on monday"],
+
+  "dependencyDashboard": true,
+  "dependencyDashboardTitle": "🤖 Dependency Dashboard",
+
+  "labels": ["dependencies", "renovate"],
+  "commitMessagePrefix": "chore(deps):",
+
+  "prConcurrentLimit": 3,
+
+  "rust": {
+    "enabled": true,
+    "rangeStrategy": "update-lockfile"
+  },
+
+  "npm": {
+    "enabled": true
+  },
+
   "packageRules": [
     {
-      "description": "Group Rust dependencies together",
-      "matchManagers": ["cargo"],
-      "groupName": "Rust dependencies",
-      "groupSlug": "rust-deps",
-      "schedule": ["before 10am on monday"]
-    },
-    {
-      "description": "Auto-merge patch and minor updates for Rust dependencies",
+      "description": "Group all non-major Rust updates",
       "matchManagers": ["cargo"],
       "matchUpdateTypes": ["patch", "minor"],
+      "groupName": "Rust dependencies",
       "automerge": true,
-      "automergeType": "pr",
       "platformAutomerge": true
     },
+
     {
       "description": "Auto-merge patch updates for npm dev dependencies",
       "matchManagers": ["npm"],
       "matchDepTypes": ["devDependencies"],
       "matchUpdateTypes": ["patch"],
       "automerge": true,
-      "automergeType": "pr",
       "platformAutomerge": true
     },
+
     {
-      "description": "Pin Rust dependencies to exact versions for stability",
-      "matchManagers": ["cargo"],
-      "matchDepTypes": ["dependencies"],
-      "pinVersions": true
-    },
-    {
-      "description": "Separate major updates for review",
+      "description": "Separate and schedule major updates",
       "matchManagers": ["cargo", "npm"],
       "matchUpdateTypes": ["major"],
       "groupName": "Major dependency updates",
-      "groupSlug": "major-updates",
       "schedule": ["before 10am on the first day of the month"]
     }
-  ],
-  "rust": {
-    "enabled": true,
-    "rangeStrategy": "update-lockfile"
-  },
-  "npm": {
-    "enabled": false
-  },
-  "schedule": [
-    "before 10am on monday"
-  ],
-  "timezone": "America/New_York",
-  "prConcurrentLimit": 3,
-  "prHourlyLimit": 2,
-  "dependencyDashboard": true,
-  "dependencyDashboardTitle": "🤖 Dependency Dashboard",
-  "labels": [
-    "dependencies",
-    "renovate"
-  ],
-  "commitMessagePrefix": "chore(deps):",
-  "commitMessageAction": "update",
-  "commitMessageTopic": "{{depName}}",
-  "commitMessageExtra": "to {{newVersion}}",
-  "separateMinorPatch": true,
-  "separateMajorMinor": true,
-  "ignoreDeps": [
-    "worker"
-  ],
-  "ignorePresets": [
-    ":prHourlyLimit2"
   ]
 }
 
