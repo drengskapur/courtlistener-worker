@@ -35,6 +35,39 @@ pub use types::*;
 // Re-export config constants for convenience
 pub use config::{API_VERSION, API_VERSION_PATH, API_BASE_URL, get_api_base_url};
 
+/// Get the current API version from CourtListener's GitHub repository changelog
+/// Returns the version in format "v4.4" (major.minor, no patch)
+/// This fetches the latest version from the changelog at runtime
+pub async fn get_current_api_version() -> worker::Result<String> {
+    let url = "https://raw.githubusercontent.com/freelawproject/courtlistener/refs/heads/main/cl/api/templates/rest-change-log.html";
+    
+    let req = Request::new(url, Method::Get)?;
+    let mut resp = Fetch::Request(req).send().await?;
+    
+    if !resp.status_code().eq(&200) {
+        return Err(worker::Error::RustError(format!(
+            "Failed to fetch changelog: HTTP {}", resp.status_code()
+        )));
+    }
+    
+    let html = resp.text().await?;
+    
+    // Look for the first version entry in the changelog: <strong>v4.4</strong>
+    // The changelog lists versions with the latest first
+    let re = regex::Regex::new(r"<strong>v(\d+)\.(\d+)")
+        .map_err(|e| worker::Error::RustError(format!("Failed to create regex: {}", e)))?;
+    
+    if let Some(caps) = re.captures(&html) {
+        if let (Some(major), Some(minor)) = (caps.get(1), caps.get(2)) {
+            return Ok(format!("v{}.{}", major.as_str(), minor.as_str()));
+        }
+    }
+    
+    Err(worker::Error::RustError(
+        "Could not find version pattern in GitHub changelog".to_string()
+    ))
+}
+
 #[event(fetch, respond_with_errors)]
 pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Response> {
     worker::console_log!("Request: {} {}", req.method(), req.path());
