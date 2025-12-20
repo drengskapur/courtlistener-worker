@@ -129,10 +129,10 @@ pub use crate::worker::get_current_api_version;
 // NOTE: The #[event] proc macro has issues with optional dependencies in Rust.
 // This is a known limitation - proc macros from optional dependencies may not be available.
 //
-// For library usage (lawforge): This doesn't matter - use with default-features = false
-// For worker deployment: Create a separate binary crate or see WORKER_DEPLOYMENT.md
+// For library usage (lawforge): Use with default-features = false to avoid this
+// For worker deployment: Use the separate binary crate in worker-bin/ directory
 //
-// Uncomment and fix when deploying as a worker:
+// Uncomment and fix when deploying as a worker (or use worker-bin/):
 // #[cfg(feature = "worker")]
 // #[event(fetch, respond_with_errors)]
 // pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
