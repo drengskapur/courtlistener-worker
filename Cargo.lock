@@ -1066,9 +1066,9 @@ checksum = "7a2d987857b319362043e95f5353c0535c1f58eec5336fdfcf626430af7def58"
 
 [[package]]
 name = "reqwest"
-version = "0.12.26"
+version = "0.12.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3b4c14b2d9afca6a60277086b0cc6a6ae0b568f6f7916c943a8cdc79f8be240f"
+checksum = "eddd3ca559203180a307f12d114c268abf583f59b03cb906fd0b3ff8646c1147"
 dependencies = [
  "base64",
  "bytes",
@@ -1324,15 +1324,15 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.145"
+version = "1.0.148"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "402a6f66d8c709116cf22f558eab210f5a50187f702eb4d7e5ef38d9a7f1c79c"
+checksum = "3084b546a1dd6289475996f182a22aba973866ea8e8b02c51d9f46b1336a22da"
 dependencies = [
  "itoa",
  "memchr",
- "ryu",
  "serde",
  "serde_core",
+ "zmij",
 ]
 
 [[package]]
@@ -2083,9 +2083,9 @@ checksum = "f17a85883d4e6d00e8a97c586de764dabcc06133f7f1d55dce5cdc070ad7fe59"
 
 [[package]]
 name = "worker"
-version = "0.7.1"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "42c76c5889873a2c309365ad4503810c007d3c25fbb4e9fa9e4e23c4ceb3c7f2"
+checksum = "ad1e113ad04154d7ded1b582891ef2ae0d62d8460fcc5663cd2378588161527c"
 dependencies = [
  "async-trait",
  "bytes",
@@ -2113,9 +2113,9 @@ dependencies = [
 
 [[package]]
 name = "worker-macros"
-version = "0.7.1"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "62c62584d037bad33789a6a5d605b3fccea1c52de9251d06f9d44054170dc612"
+checksum = "55c7ca8df6cf32003d4f60c7c89a7e975e0fa0cbf031726f45cd395e557d9a5e"
 dependencies = [
  "async-trait",
  "proc-macro2",
@@ -2129,9 +2129,9 @@ dependencies = [
 
 [[package]]
 name = "worker-sys"
-version = "0.7.1"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "72ddd412fd62c6eeffc1dd85e6ae5960a33b534f44a733df75b6e7519972bc74"
+checksum = "cefeaf6edf2558ff50e6776056464b507f64be9c1f26f2465af531b584867ed7"
 dependencies = [
  "cfg-if",
  "js-sys",
@@ -2247,3 +2247,9 @@ dependencies = [
  "quote",
  "syn",
 ]
+
+[[package]]
+name = "zmij"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0f4a4e8e9dc5c62d159f04fcdbe07f4c3fb710415aab4754bf11505501e3251d"
